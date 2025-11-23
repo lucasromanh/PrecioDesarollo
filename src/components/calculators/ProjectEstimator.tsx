@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Globe, Clock, DollarSign, TrendingUp } from 'lucide-react';
 import { estimateProjectHours } from '@/lib/calculators';
+import { BudgetGenerator } from '@/components/budget/BudgetGenerator';
 import type { EstimateResult } from '@/lib/calculators';
 
 export function ProjectEstimator() {
@@ -16,7 +17,11 @@ export function ProjectEstimator() {
   const [complexity, setComplexity] = useState(2);
   const [deadline, setDeadline] = useState('normal');
   const [includesDesign, setIncludesDesign] = useState(false);
-  const [hourlyRate, setHourlyRate] = useState(15000);
+  const [needsDomain, setNeedsDomain] = useState(true);
+  const [needsHosting, setNeedsHosting] = useState(true);
+  const [hostingType, setHostingType] = useState('shared');
+  const [needsDatabase, setNeedsDatabase] = useState(false);
+  const [currency, setCurrency] = useState('ARS');
   const [result, setResult] = useState<EstimateResult | null>(null);
 
   const handleEstimate = () => {
@@ -26,7 +31,11 @@ export function ProjectEstimator() {
       complexity,
       deadline,
       includesDesign,
-      hourlyRate,
+      needsDomain,
+      needsHosting,
+      hostingType,
+      needsDatabase,
+      currency,
     });
     setResult(res);
   };
@@ -102,16 +111,63 @@ export function ProjectEstimator() {
             </Label>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="hourlyRate">Tu Tarifa por Hora (ARS)</Label>
-            <Input
-              id="hourlyRate"
-              type="number"
-              value={hourlyRate}
-              onChange={(e) => setHourlyRate(Number(e.target.value))}
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="domain"
+              checked={needsDomain}
+              onCheckedChange={(checked) => setNeedsDomain(checked as boolean)}
             />
+            <Label htmlFor="domain" className="cursor-pointer">
+              Necesita dominio
+            </Label>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="hosting"
+              checked={needsHosting}
+              onCheckedChange={(checked) => setNeedsHosting(checked as boolean)}
+            />
+            <Label htmlFor="hosting" className="cursor-pointer">
+              Necesita hosting
+            </Label>
+          </div>
+
+          {needsHosting && (
+            <div className="space-y-2">
+              <Label htmlFor="hostingType">Tipo de Hosting</Label>
+              <Select id="hostingType" value={hostingType} onChange={(e) => setHostingType(e.target.value)}>
+                <option value="shared">Compartido (~$5/mes)</option>
+                <option value="vps">VPS (~$20/mes)</option>
+                <option value="cloud">Cloud (~$50/mes)</option>
+              </Select>
+            </div>
+          )}
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="database"
+              checked={needsDatabase}
+              onCheckedChange={(checked) => setNeedsDatabase(checked as boolean)}
+            />
+            <Label htmlFor="database" className="cursor-pointer">
+              Necesita base de datos
+            </Label>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="currency">Moneda</Label>
+            <Select
+              id="currency"
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+            >
+              <option value="ARS">🇦🇷 Pesos Argentinos (ARS)</option>
+              <option value="USD">🇺🇸 Dólares (USD)</option>
+              <option value="EUR">🇪🇺 Euros (EUR)</option>
+            </Select>
             <p className="text-xs text-muted-foreground">
-              Usa la calculadora de tarifa por hora si no estás seguro
+              La tarifa por hora se calcula automáticamente según el mercado
             </p>
           </div>
           </div>
@@ -150,6 +206,38 @@ export function ProjectEstimator() {
               </div>
             </div>
 
+            {result.additionalCosts && result.additionalCosts.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="font-semibold text-sm flex items-center gap-2">
+                  <span className="text-lg">💰</span>
+                  Costos Adicionales (No incluidos en el desarrollo)
+                </h4>
+                {result.additionalCosts.map((cost, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between p-3 bg-amber-500/5 border border-amber-500/30 rounded-lg"
+                  >
+                    <div>
+                      <p className="font-medium">{cost.item}</p>
+                      <p className="text-xs text-muted-foreground">{cost.description}</p>
+                    </div>
+                    <div className="text-right">
+                      {cost.monthlyCost && (
+                        <Badge variant="secondary" className="bg-amber-500/10">
+                          {currency} {cost.monthlyCost.toLocaleString()}/mes
+                        </Badge>
+                      )}
+                      {cost.oneTimeCost && (
+                        <Badge variant="secondary" className="bg-green-500/10">
+                          {currency} {cost.oneTimeCost.toLocaleString()} único
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div className="space-y-3">
               <h4 className="font-semibold text-sm flex items-center gap-2">
                 <span className="text-lg">📋</span>
@@ -177,6 +265,8 @@ export function ProjectEstimator() {
           </CardContent>
         </Card>
       )}
+
+      <BudgetGenerator result={result} type="project" />
     </div>
   );
 }

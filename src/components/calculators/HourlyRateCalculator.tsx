@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -6,7 +6,8 @@ import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DollarSign, TrendingUp } from 'lucide-react';
-import { calculateHourlyRate } from '@/lib/calculators';
+import { calculateHourlyRate, calculateMonthlyExpenses, getBillableHours } from '@/lib/calculators';
+import { BudgetGenerator } from '@/components/budget/BudgetGenerator';
 import type { HourlyRateResult } from '@/lib/calculators';
 
 export function HourlyRateCalculator() {
@@ -14,10 +15,18 @@ export function HourlyRateCalculator() {
   const [seniority, setSeniority] = useState('semisenior');
   const [country, setCountry] = useState('argentina');
   const [currency, setCurrency] = useState('ARS');
-  const [monthlyExpenses, setMonthlyExpenses] = useState(300000);
+  const [monthlyExpenses, setMonthlyExpenses] = useState(0);
   const [profitMargin, setProfitMargin] = useState(30);
-  const [billableHours, setBillableHours] = useState(120);
+  const [billableHours, setBillableHours] = useState(0);
   const [result, setResult] = useState<HourlyRateResult | null>(null);
+
+  // Calcular automáticamente gastos y horas cuando cambian país, seniority o moneda
+  useEffect(() => {
+    const expenses = calculateMonthlyExpenses(country, seniority, currency);
+    const hours = getBillableHours(seniority);
+    setMonthlyExpenses(expenses);
+    setBillableHours(hours);
+  }, [country, seniority, currency]);
 
   const handleCalculate = () => {
     const res = calculateHourlyRate({
@@ -94,6 +103,9 @@ export function HourlyRateCalculator() {
               value={monthlyExpenses}
               onChange={(e) => setMonthlyExpenses(Number(e.target.value))}
             />
+            <p className="text-xs text-muted-foreground">
+              Calculado automáticamente según tu región y seniority
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -104,6 +116,9 @@ export function HourlyRateCalculator() {
               value={billableHours}
               onChange={(e) => setBillableHours(Number(e.target.value))}
             />
+            <p className="text-xs text-muted-foreground">
+              Sugerido para {seniority}: {getBillableHours(seniority)}h/mes
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -162,6 +177,8 @@ export function HourlyRateCalculator() {
           </CardContent>
         </Card>
       )}
+
+      <BudgetGenerator result={result} type="hourly" />
     </div>
   );
 }

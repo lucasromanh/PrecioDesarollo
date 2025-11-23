@@ -1,0 +1,403 @@
+{
+  "theme": {
+    "name": "Firebase Studio Inspired - PreciosDesarrollo",
+    "version": "1.0.0",
+    "description": "Sistema de diseño inspirado en Firebase Studio con fondo oscuro, gradientes llamativos y componentes minimalistas",
+    
+    "colors": {
+      "background": {
+        "primary": "#0F1116",
+        "secondary": "#1B1E24",
+        "gradient": "linear-gradient(135deg, #0F1116 0%, #1B1E24 50%, #0F1116 100%)",
+        "hsl": "222 20% 6%"
+      },
+      "surface": {
+        "card": "#1B1E24",
+        "cardHover": "#222630",
+        "hsl": "220 14% 11%"
+      },
+      "primary": {
+        "default": "#FF6A3D",
+        "hover": "#E65A2F",
+        "light": "rgba(255, 106, 61, 0.1)",
+        "hsl": "14 100% 61%"
+      },
+      "text": {
+        "high": "#E1E1E1",
+        "medium": "#A1A1A1",
+        "low": "#6B6B6B",
+        "onPrimary": "#FFFFFF"
+      },
+      "border": {
+        "default": "#2A2D35",
+        "focus": "#FF6A3D",
+        "hsl": "220 14% 16%"
+      },
+      "effects": {
+        "shadow": "rgba(0, 0, 0, 0.40)",
+        "glow": "rgba(255, 106, 61, 0.20)"
+      }
+    },
+
+    "typography": {
+      "fontFamily": {
+        "base": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        "mono": "'Fira Code', 'Courier New', monospace"
+      },
+      "fontSize": {
+        "displayLarge": "4.5rem",
+        "displayMedium": "3.5rem",
+        "displaySmall": "2.5rem",
+        "h1": "2rem",
+        "h2": "1.5rem",
+        "h3": "1.25rem",
+        "body": "1rem",
+        "bodySmall": "0.875rem",
+        "caption": "0.75rem"
+      },
+      "fontWeight": {
+        "light": 300,
+        "regular": 400,
+        "medium": 500,
+        "semibold": 600,
+        "bold": 700
+      },
+      "lineHeight": {
+        "tight": 1.2,
+        "normal": 1.5,
+        "relaxed": 1.75
+      }
+    },
+
+    "spacing": {
+      "xs": "0.25rem",
+      "sm": "0.5rem",
+      "md": "1rem",
+      "lg": "1.5rem",
+      "xl": "2rem",
+      "2xl": "3rem",
+      "3xl": "4rem",
+      "4xl": "6rem",
+      "5xl": "8rem"
+    },
+
+    "borderRadius": {
+      "sm": "0.375rem",
+      "md": "0.5rem",
+      "lg": "0.75rem",
+      "xl": "1rem",
+      "2xl": "1.5rem",
+      "full": "9999px"
+    },
+
+    "shadows": {
+      "card": "0 4px 16px var(--shadow)",
+      "cardHover": "0 8px 24px var(--shadow)",
+      "button": "0 2px 8px rgba(0, 0, 0, 0.25)",
+      "buttonHover": "0 4px 12px rgba(0, 0, 0, 0.30)",
+      "modal": "0 12px 32px var(--shadow)",
+      "glow": "0 0 20px rgba(255, 106, 61, 0.30)"
+    },
+
+    "animations": {
+      "duration": {
+        "fast": "150ms",
+        "normal": "300ms",
+        "slow": "500ms"
+      },
+      "easing": {
+        "default": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "in": "cubic-bezier(0.4, 0, 1, 1)",
+        "out": "cubic-bezier(0, 0, 0.2, 1)",
+        "inOut": "cubic-bezier(0.4, 0, 0.2, 1)"
+      }
+    },
+
+    "breakpoints": {
+      "sm": "640px",
+      "md": "768px",
+      "lg": "1024px",
+      "xl": "1280px",
+      "2xl": "1536px"
+    }
+  },
+
+  "components": {
+    "Hero": {
+      "description": "Sección principal de landing con título grande y CTAs",
+      "structure": {
+        "wrapper": {
+          "classes": "w-full min-h-screen flex flex-col items-center justify-center text-center px-4",
+          "spacing": "py-16 md:py-24 lg:py-32",
+          "maxWidth": "max-w-7xl mx-auto"
+        },
+        "badge": {
+          "classes": "inline-block px-4 py-2 rounded-full bg-primary/10 border border-primary/30 mb-4",
+          "textClasses": "text-sm font-medium text-primary"
+        },
+        "title": {
+          "classes": "text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight",
+          "accentClasses": "text-primary",
+          "spacing": "mb-6"
+        },
+        "subtitle": {
+          "classes": "text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed",
+          "spacing": "mb-8"
+        },
+        "ctaGroup": {
+          "classes": "flex flex-col sm:flex-row gap-4 justify-center pt-8"
+        }
+      },
+      "tailwindExample": "className=\"text-center space-y-6 md:space-y-8 py-16 md:py-24 lg:py-32\""
+    },
+
+    "Card": {
+      "description": "Contenedor principal para agrupar contenido",
+      "variants": {
+        "default": {
+          "classes": "rounded-xl border border-border/50 bg-card text-card-foreground shadow-[0_4px_16px_var(--shadow)]",
+          "hover": "hover:bg-[#222630] transition-all duration-300"
+        },
+        "highlighted": {
+          "classes": "rounded-xl border border-primary/50 bg-card shadow-[0_4px_16px_var(--shadow)]",
+          "hover": "hover:bg-[#222630] hover:border-primary transition-all duration-300"
+        },
+        "glass": {
+          "classes": "rounded-xl border border-border/30 bg-card/50 backdrop-blur-xl shadow-[0_4px_16px_var(--shadow)]"
+        }
+      },
+      "components": {
+        "header": {
+          "classes": "flex flex-col space-y-1.5 p-6 pb-4"
+        },
+        "title": {
+          "classes": "text-2xl font-semibold leading-none tracking-tight"
+        },
+        "description": {
+          "classes": "text-sm text-muted-foreground"
+        },
+        "content": {
+          "classes": "p-6 pt-0"
+        },
+        "footer": {
+          "classes": "flex items-center p-6 pt-0"
+        }
+      },
+      "tailwindExample": "className=\"rounded-xl border-border/50 bg-card hover:bg-[#222630] shadow-[0_4px_16px_var(--shadow)] transition-all duration-300\""
+    },
+
+    "Button": {
+      "description": "Botones interactivos con múltiples variantes",
+      "variants": {
+        "primary": {
+          "classes": "inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold bg-primary text-primary-foreground",
+          "hover": "hover:bg-[#E65A2F]",
+          "shadow": "shadow-md hover:shadow-lg",
+          "transition": "transition-all duration-300"
+        },
+        "outline": {
+          "classes": "inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold border-2 border-border bg-transparent",
+          "hover": "hover:bg-card hover:border-primary/50",
+          "transition": "transition-all duration-300"
+        },
+        "ghost": {
+          "classes": "inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium bg-transparent",
+          "hover": "hover:bg-accent hover:text-accent-foreground",
+          "transition": "transition-all duration-200"
+        },
+        "destructive": {
+          "classes": "inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold bg-destructive text-destructive-foreground",
+          "hover": "hover:bg-destructive/90",
+          "shadow": "shadow-md",
+          "transition": "transition-all duration-300"
+        }
+      },
+      "sizes": {
+        "sm": "h-9 px-4",
+        "default": "h-11 px-6",
+        "lg": "h-12 px-8",
+        "icon": "h-11 w-11"
+      },
+      "states": {
+        "focus": "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+        "disabled": "disabled:pointer-events-none disabled:opacity-50"
+      },
+      "tailwindExample": "className=\"inline-flex items-center gap-2 rounded-lg px-6 py-3 bg-primary text-primary-foreground hover:bg-[#E65A2F] shadow-md hover:shadow-lg transition-all duration-300\""
+    },
+
+    "Input": {
+      "description": "Campos de entrada de texto",
+      "base": {
+        "classes": "flex h-11 w-full rounded-lg border border-border bg-card px-4 py-2 text-sm",
+        "placeholder": "placeholder:text-muted-foreground",
+        "focus": "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0 focus-visible:border-primary",
+        "disabled": "disabled:cursor-not-allowed disabled:opacity-50",
+        "transition": "transition-all duration-200"
+      },
+      "tailwindExample": "className=\"flex h-11 w-full rounded-lg border border-border bg-card px-4 py-2 focus:ring-2 focus:ring-primary transition-all\""
+    },
+
+    "Select": {
+      "description": "Selector dropdown",
+      "base": {
+        "classes": "flex h-11 w-full rounded-lg border border-border bg-card px-4 py-2 text-sm appearance-none",
+        "focus": "focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary",
+        "disabled": "disabled:cursor-not-allowed disabled:opacity-50",
+        "transition": "transition-all duration-200"
+      },
+      "icon": {
+        "classes": "absolute right-3 top-3.5 h-4 w-4 opacity-50 pointer-events-none"
+      },
+      "tailwindExample": "className=\"flex h-11 w-full rounded-lg border border-border bg-card px-4 py-2 focus:ring-2 focus:ring-primary\""
+    },
+
+    "Tabs": {
+      "description": "Navegación por pestañas",
+      "structure": {
+        "list": {
+          "classes": "inline-flex h-12 items-center justify-center rounded-xl bg-card border border-border/50 p-1",
+          "layout": "grid grid-cols-2 lg:grid-cols-4 w-full gap-2"
+        },
+        "trigger": {
+          "classes": "inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold transition-all",
+          "inactive": "text-muted-foreground hover:text-foreground",
+          "active": "bg-primary text-primary-foreground shadow-md",
+          "focus": "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        },
+        "content": {
+          "classes": "mt-6 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        }
+      },
+      "tailwindExample": "className=\"inline-flex h-12 rounded-xl bg-card border border-border/50 p-1\" | trigger: \"data-[state=active]:bg-primary data-[state=active]:text-primary-foreground\""
+    },
+
+    "Badge": {
+      "description": "Etiquetas pequeñas para estados o categorías",
+      "variants": {
+        "default": {
+          "classes": "inline-flex items-center rounded-lg border border-transparent bg-primary text-primary-foreground px-3 py-1 text-xs font-semibold",
+          "hover": "hover:bg-[#E65A2F]",
+          "transition": "transition-all duration-200"
+        },
+        "outline": {
+          "classes": "inline-flex items-center rounded-lg border border-border text-foreground px-3 py-1 text-xs font-semibold",
+          "transition": "transition-all duration-200"
+        },
+        "secondary": {
+          "classes": "inline-flex items-center rounded-lg border border-transparent bg-secondary text-secondary-foreground px-3 py-1 text-xs font-semibold",
+          "hover": "hover:bg-secondary/80"
+        }
+      },
+      "tailwindExample": "className=\"inline-flex items-center rounded-lg bg-primary text-primary-foreground px-3 py-1 text-xs font-semibold\""
+    },
+
+    "Modal": {
+      "description": "Ventana modal overlay",
+      "structure": {
+        "overlay": {
+          "classes": "fixed inset-0 z-50 bg-black/80 backdrop-blur-sm",
+          "animation": "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+        },
+        "content": {
+          "classes": "fixed left-[50%] top-[50%] z-50 w-full max-w-lg translate-x-[-50%] translate-y-[-50%] rounded-xl border border-border/50 bg-card p-6 shadow-[0_12px_32px_var(--shadow)]",
+          "animation": "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
+          "duration": "duration-300"
+        },
+        "header": {
+          "classes": "flex flex-col space-y-1.5 text-center sm:text-left mb-4"
+        },
+        "title": {
+          "classes": "text-2xl font-semibold leading-none tracking-tight"
+        },
+        "description": {
+          "classes": "text-sm text-muted-foreground"
+        },
+        "footer": {
+          "classes": "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-6"
+        }
+      },
+      "tailwindExample": "overlay: \"fixed inset-0 bg-black/80 backdrop-blur-sm\" | content: \"fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-xl bg-card p-6 shadow-[0_12px_32px_var(--shadow)]\""
+    },
+
+    "Checkbox": {
+      "description": "Casilla de verificación",
+      "base": {
+        "classes": "peer h-5 w-5 shrink-0 rounded border border-border bg-card",
+        "checked": "data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground data-[state=checked]:border-primary",
+        "focus": "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+        "disabled": "disabled:cursor-not-allowed disabled:opacity-50",
+        "transition": "transition-all duration-200"
+      },
+      "tailwindExample": "className=\"h-5 w-5 rounded border border-border bg-card data-[state=checked]:bg-primary focus:ring-2 focus:ring-primary\""
+    },
+
+    "Label": {
+      "description": "Etiqueta para inputs",
+      "base": {
+        "classes": "text-sm font-medium leading-none text-foreground peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+      },
+      "tailwindExample": "className=\"text-sm font-medium text-foreground\""
+    }
+  },
+
+  "layouts": {
+    "PageContainer": {
+      "description": "Contenedor principal de página",
+      "classes": "container mx-auto px-4 md:px-8 py-6 md:py-8 max-w-7xl",
+      "tailwindExample": "className=\"container mx-auto px-4 md:px-8 py-6 md:py-8 max-w-7xl\""
+    },
+    "Section": {
+      "description": "Sección de contenido",
+      "spacing": "py-12 md:py-16 lg:py-20",
+      "tailwindExample": "className=\"py-12 md:py-16 lg:py-20\""
+    },
+    "Grid": {
+      "description": "Sistema de grilla responsive",
+      "variants": {
+        "2cols": "grid gap-6 sm:grid-cols-2",
+        "3cols": "grid gap-6 sm:grid-cols-2 lg:grid-cols-3",
+        "4cols": "grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
+        "autoFit": "grid gap-6 grid-cols-[repeat(auto-fit,minmax(300px,1fr))]"
+      },
+      "tailwindExample": "className=\"grid gap-6 sm:grid-cols-2 lg:grid-cols-3\""
+    }
+  },
+
+  "utilities": {
+    "animations": {
+      "fadeIn": "animate-in fade-in duration-500",
+      "slideInFromBottom": "animate-in slide-in-from-bottom-8 duration-700",
+      "slideInFromTop": "animate-in slide-in-from-top-8 duration-700",
+      "scaleIn": "animate-in zoom-in-95 duration-300"
+    },
+    "gradients": {
+      "primaryGlow": "bg-gradient-to-r from-primary/20 via-primary/10 to-transparent",
+      "backgroundGradient": "bg-gradient-to-br from-background to-secondary"
+    },
+    "textGradients": {
+      "primary": "bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent"
+    }
+  },
+
+  "examples": {
+    "heroSection": {
+      "html": "<div className=\"text-center space-y-8 py-24 lg:py-32\">\n  <div className=\"inline-block px-4 py-2 rounded-full bg-primary/10 border border-primary/30\">\n    <span className=\"text-sm font-medium text-primary\">✨ Nueva característica</span>\n  </div>\n  <h1 className=\"text-6xl lg:text-7xl font-bold\">\n    Tu título <span className=\"text-primary\">impactante</span>\n  </h1>\n  <p className=\"text-xl text-muted-foreground max-w-3xl mx-auto\">\n    Descripción clara y concisa de tu producto\n  </p>\n  <div className=\"flex gap-4 justify-center\">\n    <button className=\"px-8 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-[#E65A2F] shadow-md\">Comenzar</button>\n    <button className=\"px-8 py-3 border-2 border-border rounded-lg hover:border-primary/50\">Ver demo</button>\n  </div>\n</div>"
+    },
+    "featureCard": {
+      "html": "<div className=\"rounded-xl border border-border/50 bg-card p-6 hover:bg-[#222630] shadow-[0_4px_16px_var(--shadow)] transition-all\">\n  <div className=\"w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4\">\n    <svg className=\"h-7 w-7 text-primary\" /><!-- icon -->\n  </div>\n  <h3 className=\"text-2xl font-semibold mb-2\">Título</h3>\n  <p className=\"text-muted-foreground\">Descripción de la característica</p>\n</div>"
+    }
+  },
+
+  "bestPractices": [
+    "Usa sombras sutiles para dar profundidad sin sobrecargar",
+    "Mantén el contraste alto entre texto y fondo (WCAG AA mínimo)",
+    "Limita el uso de animaciones a transiciones suaves de 200-300ms",
+    "Usa el color primary (#FF6A3D) con moderación para CTAs y elementos importantes",
+    "Mantén espaciado consistente usando el sistema de spacing definido",
+    "Asegúrate de que todos los componentes sean responsive usando breakpoints sm, md, lg",
+    "Usa rounded-xl (0.75rem) para consistencia en cards y modals",
+    "Aplica hover states sutiles para feedback visual",
+    "Prioriza la legibilidad con line-height: 1.5-1.75 en párrafos",
+    "Usa font-semibold (600) para títulos y font-medium (500) para botones"
+  ]
+}

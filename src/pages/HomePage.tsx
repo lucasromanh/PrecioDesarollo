@@ -41,12 +41,12 @@ export function HomePage() {
 
       {/* Features Cards */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 py-12 md:py-16 animate-in fade-in slide-in-from-bottom-6 duration-1000">
-        <Card className="group hover:scale-105 transition-all duration-300">
+        <Card className="group hover:bg-[#222630] transition-all duration-300 border-border/50 shadow-[0_4px_16px_var(--shadow)]">
           <CardHeader>
-            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-              <Calculator className="h-6 w-6 text-primary" />
+            <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+              <Calculator className="h-7 w-7 text-primary" />
             </div>
-            <CardTitle className="text-xl">Tarifa por Hora</CardTitle>
+            <CardTitle className="text-2xl font-semibold">Tarifa por Hora</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground leading-relaxed">
@@ -55,12 +55,12 @@ export function HomePage() {
           </CardContent>
         </Card>
 
-        <Card className="group hover:scale-105 transition-all duration-300">
+        <Card className="group hover:bg-[#222630] transition-all duration-300 border-border/50 shadow-[0_4px_16px_var(--shadow)]">
           <CardHeader>
-            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-              <Clock className="h-6 w-6 text-primary" />
+            <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+              <Clock className="h-7 w-7 text-primary" />
             </div>
-            <CardTitle className="text-xl">Estimación de Proyectos</CardTitle>
+            <CardTitle className="text-2xl font-semibold">Estimación de Proyectos</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground leading-relaxed">
@@ -69,12 +69,12 @@ export function HomePage() {
           </CardContent>
         </Card>
 
-        <Card className="group hover:scale-105 transition-all duration-300">
+        <Card className="group hover:bg-[#222630] transition-all duration-300 border-border/50 shadow-[0_4px_16px_var(--shadow)]">
           <CardHeader>
-            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-              <TrendingUp className="h-6 w-6 text-primary" />
+            <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+              <TrendingUp className="h-7 w-7 text-primary" />
             </div>
-            <CardTitle className="text-xl">Referencias de Mercado</CardTitle>
+            <CardTitle className="text-2xl font-semibold">Referencias de Mercado</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground leading-relaxed">
