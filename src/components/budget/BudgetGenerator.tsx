@@ -20,6 +20,9 @@ interface BudgetData {
     description: string;
     price: number;
     isRecurring?: boolean;
+    isHeader?: boolean;
+    isMilestone?: boolean;
+    isSubtotal?: boolean;
   }>;
   milestones?: Array<{
     name: string;
@@ -34,6 +37,7 @@ interface BudgetData {
   includeIVA: boolean;
   ivaRate: number;
   total: number;
+  isHourlyRate?: boolean;
 }
 
 interface BudgetGeneratorProps {
@@ -65,7 +69,8 @@ export function BudgetGenerator({ result, type }: BudgetGeneratorProps) {
     discountReason: '',
     includeIVA: false,
     ivaRate: 21, // IVA estándar Argentina
-    total: 0
+    total: 0,
+    isHourlyRate: false
   });
 
   // Resetear el presupuesto cuando cambia el resultado
@@ -79,19 +84,79 @@ export function BudgetGenerator({ result, type }: BudgetGeneratorProps) {
     if (!result) return;
 
     if (type === 'hourly' && 'minimumRate' in result) {
-      const items = [
-        {
-          service: 'Servicios de Desarrollo de Software',
-          description: `Tarifa por hora de desarrollo profesional`,
-          price: result.recommendedMax,
-          isRecurring: false
-        }
-      ];
+      const items = [];
+      
+      // Encabezado del servicio
+      items.push({
+        service: 'Servicios de Desarrollo de Software',
+        description: 'Tarifa por hora de desarrollo profesional',
+        price: 0,
+        isRecurring: false,
+        isHeader: true
+      });
+      
+      // Información del profesional (como milestone/desglose)
+      if (result.role) {
+        items.push({
+          service: `  Rol: ${result.role}`,
+          description: `Seniority: ${result.seniority || 'N/A'}`,
+          price: 0,
+          isRecurring: false,
+          isMilestone: true
+        });
+      }
+      
+      if (result.country) {
+        items.push({
+          service: `  País: ${result.country}`,
+          description: result.monthlyExpenses 
+            ? `Gasto mensual estimado: $${result.monthlyExpenses.toLocaleString()}`
+            : '',
+          price: 0,
+          isRecurring: false,
+          isMilestone: true
+        });
+      }
+      
+      // Tarifa por hora - mostrar el precio por hora
+      items.push({
+        service: `  Tarifa por Hora`,
+        description: 'Tarifa recomendada máxima por hora de trabajo',
+        price: result.recommendedMax,
+        isRecurring: false,
+        isMilestone: true
+      });
+      
+      // Total mensual = Tarifa × Horas
+      const monthlyTotal = result.workingHours 
+        ? result.recommendedMax * result.workingHours 
+        : result.recommendedMax;
+      
+      if (result.workingHours) {
+        items.push({
+          service: `  Total de horas facturables al mes`,
+          description: `${result.workingHours} horas × $${result.recommendedMax.toLocaleString()} por hora`,
+          price: monthlyTotal,
+          isRecurring: false,
+          isMilestone: true
+        });
+      }
+      
+      // Subtotal (ingreso mensual total)
+      items.push({
+        service: 'Ingreso Mensual Total',
+        description: result.workingHours ? `${result.workingHours}h mensuales facturables` : 'Basado en horas facturables',
+        price: monthlyTotal,
+        isRecurring: false,
+        isSubtotal: true
+      });
+      
       setBudgetData(prev => ({
         ...prev,
         items,
-        subtotal: result.recommendedMax,
-        total: result.recommendedMax
+        subtotal: monthlyTotal,
+        total: monthlyTotal,
+        isHourlyRate: true
       }));
     } else if (type === 'project' && 'hours' in result) {
       // Determinar el tipo de servicio según el projectType
@@ -117,14 +182,39 @@ export function BudgetGenerator({ result, type }: BudgetGeneratorProps) {
       const selectedAmount = selectedPrice === 'min' ? result.minPrice : result.maxPrice;
       const serviceDescription = `${result.hours} horas de desarrollo estimadas`;
       
-      const items = [
-        {
-          service: serviceName,
-          description: serviceDescription,
-          price: selectedAmount,
-          isRecurring: false
-        }
-      ];
+      const items = [];
+      
+      // Agregar encabezado del servicio principal
+      items.push({
+        service: serviceName,
+        description: serviceDescription,
+        price: 0, // No tiene precio, solo es el encabezado
+        isRecurring: false,
+        isHeader: true
+      });
+
+      // Agregar los hitos/fases como desglose del servicio
+      if ('milestones' in result && result.milestones) {
+        result.milestones.forEach(milestone => {
+          const milestoneAmount = Math.round(selectedAmount * (milestone.percentage / 100));
+          items.push({
+            service: `  ${milestone.name}`,
+            description: milestone.description || '',
+            price: milestoneAmount,
+            isRecurring: false,
+            isMilestone: true
+          });
+        });
+      }
+
+      // Agregar línea de subtotal del desarrollo
+      items.push({
+        service: 'Subtotal Desarrollo',
+        description: '',
+        price: selectedAmount,
+        isRecurring: false,
+        isSubtotal: true
+      });
 
       // Agregar costos adicionales si existen
       if ('additionalCosts' in result && result.additionalCosts && result.additionalCosts.length > 0) {
@@ -139,20 +229,15 @@ export function BudgetGenerator({ result, type }: BudgetGeneratorProps) {
         });
       }
 
-      const subtotal = items.reduce((sum, item) => sum + item.price, 0);
-      
-      // Incluir milestones si existen y recalcular montos según precio seleccionado
-      let milestones = 'milestones' in result ? result.milestones : undefined;
-      if (milestones) {
-        milestones = milestones.map(m => ({
-          ...m,
-          amount: Math.round(selectedAmount * (m.percentage / 100))
-        }));
-      }
+      // Calcular subtotal solo de items que no sean header ni subtotal
+      const subtotal = items.reduce((sum, item) => {
+        if (item.isHeader || item.isSubtotal) return sum;
+        return sum + item.price;
+      }, 0);
       
       setBudgetData(prev => ({
         ...prev,
-        milestones,
+        milestones: undefined, // Ya no usamos la sección separada
         items,
         subtotal,
         total: subtotal
@@ -183,54 +268,61 @@ export function BudgetGenerator({ result, type }: BudgetGeneratorProps) {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
-    const itemsHtml = budgetData.items.map(item => `
-      <tr>
-        <td>
-          <div class="service-name">${item.service}${item.isRecurring ? ' 🔄' : ''}</div>
-          <div class="service-desc">${item.description}</div>
-        </td>
-        <td>$${item.price.toLocaleString()}</td>
-      </tr>
-    `).join('');
+    // Determinar si necesitamos múltiples páginas
+    const itemsPerPage = 12;
+    const needsSecondPage = budgetData.items.length > itemsPerPage;
+    const page1Items = needsSecondPage ? budgetData.items.slice(0, itemsPerPage) : budgetData.items;
+    const page2Items = needsSecondPage ? budgetData.items.slice(itemsPerPage) : [];
+    const hasRecurringCosts = budgetData.items.some(item => item.isRecurring);
 
-    const milestonesHtml = budgetData.milestones && budgetData.milestones.length > 0 ? `
-      <div style="margin-top: 2rem;">
-        <h3 style="color: #FF6A3D; font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem; border-bottom: 2px solid #FF6A3D; padding-bottom: 0.5rem;">
-          📋 Desglose del Proyecto - Hitos de Desarrollo
-        </h3>
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 1.5rem;">
-          <thead>
-            <tr style="background: #f8f8f8; border-bottom: 2px solid #e5e5e5;">
-              <th style="text-align: left; padding: 0.75rem; font-weight: 600; color: #333;">Fase</th>
-              <th style="text-align: center; padding: 0.75rem; font-weight: 600; color: #333; width: 100px;">%</th>
-              <th style="text-align: right; padding: 0.75rem; font-weight: 600; color: #333; width: 120px;">Monto</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${budgetData.milestones.map(milestone => `
-              <tr style="border-bottom: 1px solid #e5e5e5;">
-                <td style="padding: 0.75rem; vertical-align: top;">
-                  <div style="font-weight: 600; color: #FF6A3D; margin-bottom: 0.25rem;">
-                    ${milestone.name}
-                  </div>
-                  ${milestone.description ? `
-                    <div style="font-size: 0.875rem; color: #666; line-height: 1.4; margin-top: 0.25rem;">
-                      ${milestone.description}
-                    </div>
-                  ` : ''}
-                </td>
-                <td style="text-align: center; padding: 0.75rem; vertical-align: top; font-weight: 500;">
-                  ${milestone.percentage}%
-                </td>
-                <td style="text-align: right; padding: 0.75rem; vertical-align: top; font-weight: 600; color: #FF6A3D;">
-                  $${milestone.amount.toLocaleString()}
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-    ` : '';
+    // Función para generar el HTML de los items
+    const generateItemsHtml = (items: typeof budgetData.items) => items.map(item => {
+      if (item.isHeader) {
+        return `
+          <tr style="background: #fff5f0; border-top: 2px solid #FF6A3D;">
+            <td colspan="2" style="padding: 0.75rem; font-weight: 700; color: #FF6A3D; font-size: 1.05rem;">
+              ${item.service}
+              ${item.description ? `<div style="font-size: 0.875rem; color: #666; font-weight: 400; margin-top: 0.25rem;">${item.description}</div>` : ''}
+            </td>
+          </tr>
+        `;
+      } else if (item.isMilestone) {
+        return `
+          <tr style="background: #fafafa;">
+            <td style="padding: 0.65rem 0.75rem; padding-left: 1.5rem;">
+              <div style="font-weight: 600; color: #333; font-size: 0.95rem;">${item.service}</div>
+              ${item.description ? `<div style="font-size: 0.8rem; color: #666; margin-top: 0.25rem; line-height: 1.4;">${item.description}</div>` : ''}
+            </td>
+            <td style="text-align: right; padding: 0.65rem 0.75rem; font-weight: 600; color: #FF6A3D;">$${item.price.toLocaleString()}</td>
+          </tr>
+        `;
+      } else if (item.isSubtotal) {
+        return `
+          <tr style="background: #fff5f0; border-bottom: 2px solid #e5e5e5;">
+            <td style="text-align: right; padding: 0.75rem; font-weight: 700; color: #FF6A3D;">
+              ${item.service}:
+            </td>
+            <td style="text-align: right; padding: 0.75rem; font-weight: 700; color: #FF6A3D; font-size: 1.1rem;">
+              $${item.price.toLocaleString()}
+            </td>
+          </tr>
+        `;
+      } else {
+        return `
+          <tr style="border-bottom: 1px solid #e5e5e5;">
+            <td>
+              <div class="service-name">${item.service}${item.isRecurring ? ' 🔄' : ''}</div>
+              <div class="service-desc">${item.description}</div>
+            </td>
+            <td>$${item.price.toLocaleString()}</td>
+          </tr>
+        `;
+      }
+    }).join('');
+
+    // Generar HTML para página 1 y página 2
+    const page1ItemsHtml = generateItemsHtml(page1Items);
+    const page2ItemsHtml = needsSecondPage ? generateItemsHtml(page2Items) : '';
 
     const discountAmount = budgetData.hasDiscount ? budgetData.subtotal * (budgetData.discountPercentage / 100) : 0;
     const subtotalAfterDiscount = budgetData.subtotal - discountAmount;
@@ -269,16 +361,23 @@ export function BudgetGenerator({ result, type }: BudgetGeneratorProps) {
                 margin: 0;
                 padding: 0;
               }
+              .page-break {
+                page-break-before: always;
+              }
+            }
+            .page {
+              width: 100%;
+              page-break-after: always;
+            }
+            .page:last-child {
+              page-break-after: auto;
             }
             .budget-container {
               width: 100%;
-              min-height: 100vh;
               background: white;
-              display: flex;
-              flex-direction: column;
             }
             .budget-body {
-              flex: 1;
+              width: 100%;
             }
             .header {
               background: linear-gradient(135deg, #FF6A3D 0%, #E65A2F 100%);
@@ -388,6 +487,7 @@ export function BudgetGenerator({ result, type }: BudgetGeneratorProps) {
               display: grid;
               grid-template-columns: 1fr 1fr 1fr;
               gap: 2rem;
+              margin-top: 3rem;
             }
             .footer-item {
               display: flex;
@@ -415,115 +515,255 @@ export function BudgetGenerator({ result, type }: BudgetGeneratorProps) {
           </style>
         </head>
         <body>
-          <div class="budget-container">
-            <div class="budget-body">
-              <div class="header">
-                <h1>📄 Presupuesto</h1>
-              </div>
-              
-              <div class="content">
-              <div class="info-grid">
-                <div class="info-section">
-                  <h3>Cliente:</h3>
-                  <p class="name">${budgetData.clientName}</p>
-                  <p class="detail">Fecha: ${budgetData.date}</p>
+          <!-- PÁGINA 1 -->
+          <div class="page">
+            <div class="header">
+              <h1>📄 Presupuesto</h1>
+            </div>
+            
+            <div class="content">
+                <div class="info-grid">
+                  <div class="info-section">
+                    <h3>Cliente:</h3>
+                    <p class="name">${budgetData.clientName}</p>
+                    <p class="detail">Fecha: ${budgetData.date}</p>
+                  </div>
+                  <div class="info-section info-right">
+                    <h3>De:</h3>
+                    <p class="name">${budgetData.companyName}</p>
+                    <p class="detail">${budgetData.companyEmail}</p>
+                    <p class="detail">${budgetData.companyPhone}</p>
+                    <p class="detail">${budgetData.companyAddress}</p>
+                  </div>
                 </div>
-                <div class="info-section info-right">
-                  <h3>De:</h3>
-                  <p class="name">${budgetData.companyName}</p>
-                  <p class="detail">${budgetData.companyEmail}</p>
-                  <p class="detail">${budgetData.companyPhone}</p>
-                  <p class="detail">${budgetData.companyAddress}</p>
-                </div>
-              </div>
 
-              <table>
-                <thead>
-                  <tr>
-                    <th>Servicio</th>
-                    <th>Precio</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${itemsHtml}
-                </tbody>
-                <tbody>
-                  <tr style="border-top: 2px solid #e5e5e5;">
-                    <td style="text-align: right; font-weight: 600;">Subtotal:</td>
-                    <td>$${budgetData.subtotal.toLocaleString()}</td>
-                  </tr>
-                  ${budgetData.hasDiscount ? `
-                    <tr style="color: #16a34a;">
-                      <td style="text-align: right; font-weight: 600;">
-                        Descuento (${budgetData.discountPercentage}%)
-                        ${budgetData.discountReason ? `<br><span style="font-size: 0.875rem; font-weight: 400; color: #666;">${budgetData.discountReason}</span>` : ''}
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Servicio</th>
+                      <th>Precio</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${page1ItemsHtml}
+                  </tbody>
+                  ${!needsSecondPage ? `
+                  <tbody>
+                    <tr style="border-top: 2px solid #e5e5e5;">
+                      <td style="text-align: right; font-weight: 600; padding: 0.75rem;">Subtotal:</td>
+                      <td style="text-align: right; padding: 0.75rem; font-weight: 600;">$${budgetData.subtotal.toLocaleString()}</td>
+                    </tr>
+                    ${budgetData.hasDiscount ? `
+                      <tr style="color: #16a34a;">
+                        <td style="text-align: right; font-weight: 600; padding: 0.75rem;">
+                          Descuento (${budgetData.discountPercentage}%)
+                          ${budgetData.discountReason ? `<br><span style="font-size: 0.875rem; font-weight: 400; color: #666;">${budgetData.discountReason}</span>` : ''}
+                        </td>
+                        <td style="text-align: right; padding: 0.75rem; font-weight: 600;">-$${discountAmount.toLocaleString()}</td>
+                      </tr>
+                      <tr>
+                        <td style="text-align: right; font-weight: 600; padding: 0.75rem;">Subtotal con descuento:</td>
+                        <td style="text-align: right; padding: 0.75rem; font-weight: 600;">$${subtotalAfterDiscount.toLocaleString()}</td>
+                      </tr>
+                    ` : ''}
+                    ${budgetData.includeIVA ? `
+                      <tr>
+                        <td style="text-align: right; font-weight: 600; padding: 0.75rem;">IVA (${budgetData.ivaRate}%):</td>
+                        <td style="text-align: right; padding: 0.75rem; font-weight: 600;">$${ivaAmount.toLocaleString()}</td>
+                      </tr>
+                    ` : ''}
+                  </tbody>
+                  <tfoot style="background: #fff5f0; border-top: 2px solid #FF6A3D;">
+                    <tr>
+                      <td style="text-align: right; padding: 1rem; font-weight: 700; font-size: 1.125rem;">TOTAL</td>
+                      <td style="text-align: right; padding: 1rem; font-weight: 700; font-size: 1.25rem; color: #FF6A3D;">$${budgetData.total.toLocaleString()}</td>
+                    </tr>
+                  </tfoot>
+                  ` : `
+                  <tbody>
+                    <tr style="border-top: 1px solid #e5e5e5; background: #f9f9f9;">
+                      <td colspan="2" style="text-align: center; padding: 0.75rem; font-size: 0.875rem; color: #666; font-style: italic;">
+                        Continúa en la página siguiente...
                       </td>
-                      <td>-$${discountAmount.toLocaleString()}</td>
                     </tr>
-                    <tr>
-                      <td style="text-align: right; font-weight: 600;">Subtotal con descuento:</td>
-                      <td>$${subtotalAfterDiscount.toLocaleString()}</td>
-                    </tr>
+                  </tbody>
+                  `}
+                </table>
+
+                ${!needsSecondPage ? `
+                  ${hasRecurringCosts ? `
+                  <div style="background: #f8fafc; border-left: 4px solid #64748b; padding: 1rem; margin: 1.5rem 0; border-radius: 0.5rem;">
+                    <p style="margin: 0; font-size: 0.875rem; color: #334155; line-height: 1.5;">
+                      <strong style="color: #0f172a;">Nota Importante sobre Costos Recurrentes:</strong><br>
+                      Los ítems marcados como "Pago mensual" o con 🔄 son servicios de terceros (hosting, bases de datos, APIs, tokens de IA, etc.) 
+                      que <strong>están a cargo del cliente</strong> y deben renovarse periódicamente. El desarrollador no se hace responsable 
+                      de estos costos operativos una vez finalizado el proyecto.
+                    </p>
+                  </div>
                   ` : ''}
-                  ${budgetData.includeIVA ? `
-                    <tr>
-                      <td style="text-align: right; font-weight: 600;">IVA (${budgetData.ivaRate}%):</td>
-                      <td>$${ivaAmount.toLocaleString()}</td>
-                    </tr>
+                  
+                  ${budgetData.isHourlyRate ? `
+                  <div style="background: #fff5f0; border-left: 4px solid #FF6A3D; padding: 1rem; margin: 1.5rem 0; border-radius: 0.5rem;">
+                    <p style="margin: 0; font-size: 0.875rem; color: #334155; line-height: 1.5;">
+                      <strong style="color: #0f172a;">Términos de Contratación por Horas:</strong><br>
+                      Este presupuesto está basado en la cantidad de horas estimadas mencionadas. Si el proyecto se completa en <strong>menos tiempo del estimado</strong>, quedará a consideración del desarrollador realizar un ajuste o descuento proporcional sobre el monto total. En caso de que el proyecto requiera <strong>horas adicionales</strong> debido a solicitudes extras o cambios en los requerimientos iniciales por parte del cliente, estas serán <strong>facturadas por separado</strong> a la tarifa por hora establecida antes de la finalización del proyecto.
+                    </p>
+                  </div>
                   ` : ''}
-                </tbody>
-                <tfoot>
-                  <tr>
-                    <td>Total</td>
-                    <td>$${budgetData.total.toLocaleString()}</td>
-                  </tr>
-                </tfoot>
-              </table>
 
-              ${milestonesHtml}
-
-              <div style="background: #f8fafc; border-left: 4px solid #64748b; padding: 1rem; margin: 1.5rem 0; border-radius: 0.5rem;">
-                <p style="margin: 0; font-size: 0.875rem; color: #334155; line-height: 1.5;">
-                  <strong style="color: #0f172a;">Nota Importante sobre Costos Recurrentes:</strong><br>
-                  Los ítems marcados como "Pago mensual" o con 🔄 son servicios de terceros (hosting, bases de datos, APIs, tokens de IA, etc.) 
-                  que <strong>están a cargo del cliente</strong> y deben renovarse periódicamente. El desarrollador no se hace responsable 
-                  de estos costos operativos una vez finalizado el proyecto.
-                </p>
-              </div>
-
-                ${budgetData.signature ? `
+                  ${budgetData.signature ? `
                   <div class="signature">
                     <p class="name">${budgetData.signature}</p>
                     <p class="company">${budgetData.companyName}</p>
                   </div>
+                  ` : ''}
+                  
+                  <div class="footer">
+                    <div class="footer-item">
+                      <div class="footer-icon">📧</div>
+                      <div class="footer-info">
+                        <p>Email</p>
+                        <p>${budgetData.companyEmail}</p>
+                      </div>
+                    </div>
+                    <div class="footer-item">
+                      <div class="footer-icon">📞</div>
+                      <div class="footer-info">
+                        <p>Teléfono</p>
+                        <p>${budgetData.companyPhone}</p>
+                      </div>
+                    </div>
+                    <div class="footer-item">
+                      <div class="footer-icon">📍</div>
+                      <div class="footer-info">
+                        <p>Ubicación</p>
+                        <p>Argentina</p>
+                      </div>
+                    </div>
+                  </div>
                 ` : ''}
-              </div>
-            </div>
-
-            <div class="footer">
-              <div class="footer-item">
-                <div class="footer-icon">📧</div>
-                <div class="footer-info">
-                  <p>Email</p>
-                  <p>${budgetData.companyEmail}</p>
-                </div>
-              </div>
-              <div class="footer-item">
-                <div class="footer-icon">📞</div>
-                <div class="footer-info">
-                  <p>Teléfono</p>
-                  <p>${budgetData.companyPhone}</p>
-                </div>
-              </div>
-              <div class="footer-item">
-                <div class="footer-icon">📍</div>
-                <div class="footer-info">
-                  <p>Ubicación</p>
-                  <p>Argentina</p>
-                </div>
-              </div>
             </div>
           </div>
+
+          <!-- PÁGINA 2 (si es necesario) -->
+          ${needsSecondPage ? `
+          <div class="page page-break">
+            <div class="header">
+              <h1>📄 Presupuesto - Página 2</h1>
+            </div>
+            
+            <div class="content">
+                <div class="info-grid">
+                  <div class="info-section">
+                    <h3>Cliente:</h3>
+                    <p class="name">${budgetData.clientName}</p>
+                    <p class="detail">Fecha: ${budgetData.date}</p>
+                  </div>
+                  <div class="info-section info-right">
+                    <h3>De:</h3>
+                    <p class="name">${budgetData.companyName}</p>
+                    <p class="detail">${budgetData.companyEmail}</p>
+                    <p class="detail">${budgetData.companyPhone}</p>
+                    <p class="detail">${budgetData.companyAddress}</p>
+                  </div>
+                </div>
+
+                <table>
+                  ${page2Items.length > 0 ? `
+                  <thead>
+                    <tr>
+                      <th>Servicio</th>
+                      <th>Precio</th>
+                    </tr>
+                  </thead>
+                  ` : ''}
+                  <tbody>
+                    ${page2ItemsHtml}
+                    <tr style="border-top: 2px solid #e5e5e5;">
+                      <td style="text-align: right; font-weight: 600; padding: 0.75rem;">Subtotal:</td>
+                      <td style="text-align: right; padding: 0.75rem; font-weight: 600;">$${budgetData.subtotal.toLocaleString()}</td>
+                    </tr>
+                    ${budgetData.hasDiscount ? `
+                      <tr style="color: #16a34a;">
+                        <td style="text-align: right; font-weight: 600; padding: 0.75rem;">
+                          Descuento (${budgetData.discountPercentage}%)
+                          ${budgetData.discountReason ? `<br><span style="font-size: 0.875rem; font-weight: 400; color: #666;">${budgetData.discountReason}</span>` : ''}
+                        </td>
+                        <td style="text-align: right; padding: 0.75rem; font-weight: 600;">-$${discountAmount.toLocaleString()}</td>
+                      </tr>
+                      <tr>
+                        <td style="text-align: right; font-weight: 600; padding: 0.75rem;">Subtotal con descuento:</td>
+                        <td style="text-align: right; padding: 0.75rem; font-weight: 600;">$${subtotalAfterDiscount.toLocaleString()}</td>
+                      </tr>
+                    ` : ''}
+                    ${budgetData.includeIVA ? `
+                      <tr>
+                        <td style="text-align: right; font-weight: 600; padding: 0.75rem;">IVA (${budgetData.ivaRate}%):</td>
+                        <td style="text-align: right; padding: 0.75rem; font-weight: 600;">$${ivaAmount.toLocaleString()}</td>
+                      </tr>
+                    ` : ''}
+                  </tbody>
+                  <tfoot style="background: #fff5f0; border-top: 2px solid #FF6A3D;">
+                    <tr>
+                      <td style="text-align: right; padding: 1rem; font-weight: 700; font-size: 1.125rem;">TOTAL</td>
+                      <td style="text-align: right; padding: 1rem; font-weight: 700; font-size: 1.25rem; color: #FF6A3D;">$${budgetData.total.toLocaleString()}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+
+                ${hasRecurringCosts ? `
+                <div style="background: #f8fafc; border-left: 4px solid #64748b; padding: 1rem; margin: 1.5rem 0; border-radius: 0.5rem;">
+                  <p style="margin: 0; font-size: 0.875rem; color: #334155; line-height: 1.5;">
+                    <strong style="color: #0f172a;">Nota Importante sobre Costos Recurrentes:</strong><br>
+                    Los ítems marcados como "Pago mensual" o con 🔄 son servicios de terceros (hosting, bases de datos, APIs, tokens de IA, etc.) 
+                    que <strong>están a cargo del cliente</strong> y deben renovarse periódicamente. El desarrollador no se hace responsable 
+                    de estos costos operativos una vez finalizado el proyecto.
+                  </p>
+                </div>
+                ` : ''}
+                
+                ${budgetData.isHourlyRate ? `
+                <div style="background: #fff5f0; border-left: 4px solid #FF6A3D; padding: 1rem; margin: 1.5rem 0; border-radius: 0.5rem;">
+                  <p style="margin: 0; font-size: 0.875rem; color: #334155; line-height: 1.5;">
+                    <strong style="color: #0f172a;">Términos de Contratación por Horas:</strong><br>
+                    Este presupuesto está basado en la cantidad de horas estimadas mencionadas. Si el proyecto se completa en <strong>menos tiempo del estimado</strong>, quedará a consideración del desarrollador realizar un ajuste o descuento proporcional sobre el monto total. En caso de que el proyecto requiera <strong>horas adicionales</strong> debido a solicitudes extras o cambios en los requerimientos iniciales por parte del cliente, estas serán <strong>facturadas por separado</strong> a la tarifa por hora establecida antes de la finalización del proyecto.
+                  </p>
+                </div>
+                ` : ''}
+
+                ${budgetData.signature ? `
+                <div class="signature">
+                  <p class="name">${budgetData.signature}</p>
+                  <p class="company">${budgetData.companyName}</p>
+                </div>
+                ` : ''}
+                
+                <div class="footer">
+                  <div class="footer-item">
+                    <div class="footer-icon">📧</div>
+                    <div class="footer-info">
+                      <p>Email</p>
+                      <p>${budgetData.companyEmail}</p>
+                    </div>
+                  </div>
+                  <div class="footer-item">
+                    <div class="footer-icon">📞</div>
+                    <div class="footer-info">
+                      <p>Teléfono</p>
+                      <p>${budgetData.companyPhone}</p>
+                    </div>
+                  </div>
+                  <div class="footer-item">
+                    <div class="footer-icon">📍</div>
+                    <div class="footer-info">
+                      <p>Ubicación</p>
+                      <p>Argentina</p>
+                    </div>
+                  </div>
+                </div>
+            </div>
+          </div>
+          ` : ''}
           
           <script>
             window.onload = () => {
@@ -726,6 +966,7 @@ export function BudgetGenerator({ result, type }: BudgetGeneratorProps) {
                               type="button"
                               onClick={() => {
                                 setDiscountInput('5');
+                                handleUpdateField('hasDiscount', true);
                                 handleUpdateField('discountPercentage', 5);
                               }}
                               className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
@@ -740,6 +981,7 @@ export function BudgetGenerator({ result, type }: BudgetGeneratorProps) {
                               type="button"
                               onClick={() => {
                                 setDiscountInput('10');
+                                handleUpdateField('hasDiscount', true);
                                 handleUpdateField('discountPercentage', 10);
                               }}
                               className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
@@ -754,6 +996,7 @@ export function BudgetGenerator({ result, type }: BudgetGeneratorProps) {
                               type="button"
                               onClick={() => {
                                 setDiscountInput('15');
+                                handleUpdateField('hasDiscount', true);
                                 handleUpdateField('discountPercentage', 15);
                               }}
                               className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
@@ -768,6 +1011,7 @@ export function BudgetGenerator({ result, type }: BudgetGeneratorProps) {
                               type="button"
                               onClick={() => {
                                 setDiscountInput('20');
+                                handleUpdateField('hasDiscount', true);
                                 handleUpdateField('discountPercentage', 20);
                               }}
                               className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
@@ -782,6 +1026,7 @@ export function BudgetGenerator({ result, type }: BudgetGeneratorProps) {
                               type="button"
                               onClick={() => {
                                 setDiscountInput('25');
+                                handleUpdateField('hasDiscount', true);
                                 handleUpdateField('discountPercentage', 25);
                               }}
                               className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
@@ -925,48 +1170,57 @@ export function BudgetGenerator({ result, type }: BudgetGeneratorProps) {
 
 function BudgetPreview({ data }: { data: BudgetData }) {
   const hasRecurringCosts = data.items.some(item => item.isRecurring);
-  const itemsPerPage = 8; // Máximo de ítems por página para que quepa bien
-  const needsSecondPage = data.items.length > itemsPerPage || (data.items.length > 6 && hasRecurringCosts);
+  
+  // Determinar si necesitamos múltiples páginas (más de 12 items o muchos items + costos recurrentes)
+  const itemsPerPage = 12;
+  const needsSecondPage = data.items.length > itemsPerPage;
   
   const page1Items = needsSecondPage ? data.items.slice(0, itemsPerPage) : data.items;
   const page2Items = needsSecondPage ? data.items.slice(itemsPerPage) : [];
+
+  // Componente de encabezado reutilizable
+  const BudgetHeader = ({ pageNumber }: { pageNumber?: number }) => (
+    <>
+      {/* Header con diseño naranja */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary to-[#E65A2F] p-6 text-white">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full -ml-24 -mb-24"></div>
+        <div className="relative z-10">
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="w-10 h-10 bg-white/20 backdrop-blur rounded-lg flex items-center justify-center mb-2">
+                <FileText className="h-5 w-5" />
+              </div>
+              <h1 className="text-2xl font-bold">Presupuesto{pageNumber ? ` - Página ${pageNumber}` : ''}</h1>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Información del cliente y empresa */}
+      <div className="p-6 grid md:grid-cols-2 gap-6">
+        <div>
+          <h3 className="text-xs font-semibold text-muted-foreground mb-1">CLIENTE</h3>
+          <p className="text-base font-semibold">{data.clientName}</p>
+          <p className="text-xs text-muted-foreground mt-1">Fecha: {data.date}</p>
+        </div>
+        <div className="text-left md:text-right">
+          <h3 className="text-xs font-semibold text-muted-foreground mb-1">DE</h3>
+          <p className="text-base font-semibold">{data.companyName}</p>
+          <p className="text-xs text-muted-foreground mt-1">{data.companyEmail}</p>
+          <p className="text-xs text-muted-foreground">{data.companyPhone}</p>
+          <p className="text-xs text-muted-foreground">{data.companyAddress}</p>
+        </div>
+      </div>
+    </>
+  );
 
   return (
     <>
       {/* PÁGINA 1 - Presupuesto Principal */}
       <Card className="border-2 border-primary/30 bg-card shadow-[0_8px_24px_var(--shadow)] mb-8 page-break">
         <CardContent className="p-0">
-          {/* Header con diseño naranja */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-primary to-[#E65A2F] p-6 text-white">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full -ml-24 -mb-24"></div>
-            <div className="relative z-10">
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="w-10 h-10 bg-white/20 backdrop-blur rounded-lg flex items-center justify-center mb-2">
-                    <FileText className="h-5 w-5" />
-                  </div>
-                  <h1 className="text-2xl font-bold">Presupuesto</h1>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Información del cliente y empresa */}
-          <div className="p-6 grid md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="text-xs font-semibold text-muted-foreground mb-1">CLIENTE</h3>
-              <p className="text-base font-semibold">{data.clientName}</p>
-              <p className="text-xs text-muted-foreground mt-1">Fecha: {data.date}</p>
-            </div>
-            <div className="text-left md:text-right">
-              <h3 className="text-xs font-semibold text-muted-foreground mb-1">DE</h3>
-              <p className="text-base font-semibold">{data.companyName}</p>
-              <p className="text-xs text-muted-foreground mt-1">{data.companyEmail}</p>
-              <p className="text-xs text-muted-foreground">{data.companyPhone}</p>
-              <p className="text-xs text-muted-foreground">{data.companyAddress}</p>
-            </div>
-          </div>
+          <BudgetHeader />
 
           {/* Tabla de Servicios */}
           <div className="px-6 pb-6">
@@ -979,33 +1233,66 @@ function BudgetPreview({ data }: { data: BudgetData }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {page1Items.map((item, index) => (
-                    <tr key={index} className="border-t border-border">
-                      <td className="p-3">
-                        <p className="font-medium flex items-center gap-2">
-                          {item.service}
-                          {item.isRecurring && (
-                            <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded uppercase font-semibold">
-                              Recurrente
-                            </span>
-                          )}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{item.description}</p>
-                      </td>
-                      <td className="p-3 text-right font-semibold whitespace-nowrap">
-                        ${item.price.toLocaleString()}
-                      </td>
-                    </tr>
-                  ))}
+                  {page1Items.map((item, index) => {
+                    if (item.isHeader) {
+                      return (
+                        <tr key={index} className="bg-primary/5 border-t-2 border-primary">
+                          <td colSpan={2} className="p-3">
+                            <p className="font-bold text-primary text-base">{item.service}</p>
+                            {item.description && (
+                              <p className="text-xs text-muted-foreground mt-1">{item.description}</p>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    } else if (item.isMilestone) {
+                      return (
+                        <tr key={index} className="bg-muted/20 border-t border-border/50">
+                          <td className="p-3 pl-6">
+                            <p className="font-semibold text-sm">{item.service}</p>
+                            {item.description && (
+                              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{item.description}</p>
+                            )}
+                          </td>
+                          <td className="p-3 text-right font-semibold text-primary whitespace-nowrap">
+                            ${item.price.toLocaleString()}
+                          </td>
+                        </tr>
+                      );
+                    } else if (item.isSubtotal) {
+                      return (
+                        <tr key={index} className="bg-primary/5 border-t-2 border-border">
+                          <td className="p-3 text-right font-bold text-primary">
+                            {item.service}:
+                          </td>
+                          <td className="p-3 text-right font-bold text-primary text-base whitespace-nowrap">
+                            ${item.price.toLocaleString()}
+                          </td>
+                        </tr>
+                      );
+                    } else {
+                      return (
+                        <tr key={index} className="border-t border-border">
+                          <td className="p-3">
+                            <p className="font-medium flex items-center gap-2">
+                              {item.service}
+                              {item.isRecurring && (
+                                <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded uppercase font-semibold">
+                                  Recurrente
+                                </span>
+                              )}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{item.description}</p>
+                          </td>
+                          <td className="p-3 text-right font-semibold whitespace-nowrap">
+                            ${item.price.toLocaleString()}
+                          </td>
+                        </tr>
+                      );
+                    }
+                  })}
                   
-                  {needsSecondPage && (
-                    <tr className="border-t border-border bg-muted/30">
-                      <td colSpan={2} className="p-3 text-center text-xs text-muted-foreground italic">
-                        Continúa en la página siguiente...
-                      </td>
-                    </tr>
-                  )}
-                  
+                  {/* Mostrar totales solo si NO hay segunda página */}
                   {!needsSecondPage && (
                     <>
                       <tr className="border-t-2 border-border">
@@ -1045,6 +1332,15 @@ function BudgetPreview({ data }: { data: BudgetData }) {
                       )}
                     </>
                   )}
+                  
+                  {/* Mensaje de continuación solo si hay items en página 2 */}
+                  {needsSecondPage && (
+                    <tr className="border-t border-border bg-muted/30">
+                      <td colSpan={2} className="p-3 text-center text-xs text-muted-foreground italic">
+                        Continúa en la página siguiente...
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
                 {!needsSecondPage && (
                   <tfoot className="bg-primary/5 border-t-2 border-primary">
@@ -1060,23 +1356,52 @@ function BudgetPreview({ data }: { data: BudgetData }) {
             </div>
           </div>
 
-          {/* Footer en página 1 */}
-          <div className="bg-muted/30 px-6 py-4 border-t border-border">
-            <div className="grid grid-cols-3 gap-4 text-xs">
-              <div>
-                <p className="text-[10px] text-muted-foreground uppercase font-semibold mb-1">Email</p>
-                <p className="font-medium text-foreground truncate">{data.companyEmail}</p>
+          {/* Notas en página 1 - Solo si NO hay segunda página */}
+          {!needsSecondPage && (
+            <>
+              {/* Nota sobre costos recurrentes */}
+              {hasRecurringCosts && (
+                <div className="px-6 pb-6">
+                  <div className="border border-border bg-background rounded p-4">
+                    <h4 className="text-xs font-bold text-foreground mb-2 uppercase tracking-wide">Nota Importante sobre Costos Recurrentes</h4>
+                    <p className="text-xs text-foreground leading-relaxed">
+                      Los ítems marcados como "RECURRENTE" son servicios de terceros (hosting, bases de datos, APIs, tokens de IA, registros de dominio, etc.) que <strong>están a cargo del cliente</strong> y deben renovarse periódicamente. El desarrollador no se hace responsable de estos costos operativos una vez finalizado el proyecto.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Nota específica para presupuestos por hora */}
+              {data.isHourlyRate && (
+                <div className="px-6 pb-6">
+                  <div className="border border-primary/30 bg-primary/5 rounded p-4">
+                    <h4 className="text-xs font-bold text-foreground mb-2 uppercase tracking-wide">Términos de Contratación por Horas</h4>
+                    <p className="text-xs text-foreground leading-relaxed">
+                      Este presupuesto está basado en la cantidad de horas estimadas mencionadas. Si el proyecto se completa en <strong>menos tiempo del estimado</strong>, quedará a consideración del desarrollador realizar un ajuste o descuento proporcional sobre el monto total. En caso de que el proyecto requiera <strong>horas adicionales</strong> debido a solicitudes extras o cambios en los requerimientos iniciales por parte del cliente, estas serán <strong>facturadas por separado</strong> a la tarifa por hora establecida antes de la finalización del proyecto.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Footer en página 1 */}
+              <div className="bg-muted/30 px-6 py-4 border-t border-border">
+                <div className="grid grid-cols-3 gap-4 text-xs">
+                  <div>
+                    <p className="text-[10px] text-muted-foreground uppercase font-semibold mb-1">Email</p>
+                    <p className="font-medium text-foreground truncate">{data.companyEmail}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-muted-foreground uppercase font-semibold mb-1">Teléfono</p>
+                    <p className="font-medium text-foreground truncate">{data.companyPhone}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-muted-foreground uppercase font-semibold mb-1">Ubicación</p>
+                    <p className="font-medium text-foreground">Argentina</p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <p className="text-[10px] text-muted-foreground uppercase font-semibold mb-1">Teléfono</p>
-                <p className="font-medium text-foreground truncate">{data.companyPhone}</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-muted-foreground uppercase font-semibold mb-1">Ubicación</p>
-                <p className="font-medium text-foreground">Argentina</p>
-              </div>
-            </div>
-          </div>
+            </>
+          )}
         </CardContent>
       </Card>
 
@@ -1084,43 +1409,81 @@ function BudgetPreview({ data }: { data: BudgetData }) {
       {needsSecondPage && (
         <Card className="border-2 border-primary/30 bg-card shadow-[0_8px_24px_var(--shadow)] page-break">
           <CardContent className="p-0">
-            {/* Header mini */}
-            <div className="bg-gradient-to-r from-primary to-[#E65A2F] p-4 text-white">
-              <h2 className="text-lg font-bold">Presupuesto - Página 2</h2>
-              <p className="text-xs opacity-90">Cliente: {data.clientName}</p>
-            </div>
+            {/* Repetir encabezado completo en página 2 */}
+            <BudgetHeader pageNumber={2} />
 
-            {/* Continuación de ítems si hay */}
-            {page2Items.length > 0 && (
-              <div className="p-6">
-                <h3 className="text-sm font-semibold mb-3">Servicios (continuación)</h3>
-                <div className="border border-border rounded-lg overflow-hidden">
-                  <table className="w-full text-sm">
+            {/* Continuación de ítems o resumen de totales */}
+            <div className="p-6">
+              <h3 className="text-sm font-semibold mb-3">{page2Items.length > 0 ? 'Servicios (continuación)' : 'Resumen del Presupuesto'}</h3>
+              <div className="border border-border rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                  {page2Items.length > 0 && (
                     <thead className="bg-muted/50">
                       <tr>
                         <th className="text-left p-3 font-semibold">Servicio</th>
                         <th className="text-right p-3 font-semibold">Precio</th>
                       </tr>
                     </thead>
-                    <tbody>
-                      {page2Items.map((item, index) => (
-                        <tr key={index} className="border-t border-border">
-                          <td className="p-3">
-                            <p className="font-medium flex items-center gap-2">
-                              {item.service}
-                              {item.isRecurring && (
-                                <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded uppercase font-semibold">
-                                  Recurrente
-                                </span>
-                              )}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{item.description}</p>
-                          </td>
-                          <td className="p-3 text-right font-semibold whitespace-nowrap">
-                            ${item.price.toLocaleString()}
-                          </td>
-                        </tr>
-                      ))}
+                  )}
+                  <tbody>
+                    {page2Items.map((item, index) => {
+                        if (item.isHeader) {
+                          return (
+                            <tr key={index} className="bg-primary/5 border-t-2 border-primary">
+                              <td colSpan={2} className="p-3">
+                                <p className="font-bold text-primary text-base">{item.service}</p>
+                                {item.description && (
+                                  <p className="text-xs text-muted-foreground mt-1">{item.description}</p>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        } else if (item.isMilestone) {
+                          return (
+                            <tr key={index} className="bg-muted/20 border-t border-border/50">
+                              <td className="p-3 pl-6">
+                                <p className="font-semibold text-sm">{item.service}</p>
+                                {item.description && (
+                                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{item.description}</p>
+                                )}
+                              </td>
+                              <td className="p-3 text-right font-semibold text-primary whitespace-nowrap">
+                                ${item.price.toLocaleString()}
+                              </td>
+                            </tr>
+                          );
+                        } else if (item.isSubtotal) {
+                          return (
+                            <tr key={index} className="bg-primary/5 border-t-2 border-border">
+                              <td className="p-3 text-right font-bold text-primary">
+                                {item.service}:
+                              </td>
+                              <td className="p-3 text-right font-bold text-primary text-base whitespace-nowrap">
+                                ${item.price.toLocaleString()}
+                              </td>
+                            </tr>
+                          );
+                        } else {
+                          return (
+                            <tr key={index} className="border-t border-border">
+                              <td className="p-3">
+                                <p className="font-medium flex items-center gap-2">
+                                  {item.service}
+                                  {item.isRecurring && (
+                                    <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded uppercase font-semibold">
+                                      Recurrente
+                                    </span>
+                                  )}
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{item.description}</p>
+                              </td>
+                              <td className="p-3 text-right font-semibold whitespace-nowrap">
+                                ${item.price.toLocaleString()}
+                              </td>
+                            </tr>
+                          );
+                        }
+                      })}
                       <tr className="border-t-2 border-border">
                         <td className="p-3 text-right font-semibold">Subtotal:</td>
                         <td className="p-3 text-right font-semibold">
@@ -1168,50 +1531,8 @@ function BudgetPreview({ data }: { data: BudgetData }) {
                   </table>
                 </div>
               </div>
-            )}
 
-            {/* Hitos del Proyecto / Milestones */}
-            {data.milestones && data.milestones.length > 0 && (
-              <div className="px-6 pb-6">
-                <h3 className="text-sm font-semibold mb-3 text-foreground">Hitos del Proyecto</h3>
-                <div className="border border-border rounded-lg overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead className="bg-muted/50">
-                      <tr>
-                        <th className="text-left p-3 font-semibold">Fase</th>
-                        <th className="text-center p-3 font-semibold">Porcentaje</th>
-                        <th className="text-right p-3 font-semibold">Monto</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data.milestones.map((milestone, index) => (
-                        <tr key={index} className="border-t border-border">
-                          <td className="p-3">
-                            <p className="font-medium text-foreground">{milestone.name}</p>
-                            {milestone.description && (
-                              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                                {milestone.description}
-                              </p>
-                            )}
-                          </td>
-                          <td className="p-3 text-center text-foreground">
-                            {milestone.percentage}%
-                          </td>
-                          <td className="p-3 text-right font-semibold text-foreground whitespace-nowrap">
-                            ${milestone.amount.toLocaleString()}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2 italic">
-                  Los pagos se realizarán según la finalización de cada hito del proyecto.
-                </p>
-              </div>
-            )}
-
-            {/* Notas importantes */}
+            {/* Notas importantes - En página 2 si existe, o en página 1 si no hay segunda página */}
             {hasRecurringCosts && (
               <div className="px-6 pb-6">
                 <div className="border border-border bg-background rounded p-4">
@@ -1223,7 +1544,19 @@ function BudgetPreview({ data }: { data: BudgetData }) {
               </div>
             )}
 
-            {/* Firma */}
+            {/* Nota específica para presupuestos por hora */}
+            {data.isHourlyRate && (
+              <div className="px-6 pb-6">
+                <div className="border border-primary/30 bg-primary/5 rounded p-4">
+                  <h4 className="text-xs font-bold text-foreground mb-2 uppercase tracking-wide">Términos de Contratación por Horas</h4>
+                  <p className="text-xs text-foreground leading-relaxed">
+                    Este presupuesto está basado en la cantidad de horas estimadas mencionadas. Si el proyecto se completa en <strong>menos tiempo del estimado</strong>, quedará a consideración del desarrollador realizar un ajuste o descuento proporcional sobre el monto total. En caso de que el proyecto requiera <strong>horas adicionales</strong> debido a solicitudes extras o cambios en los requerimientos iniciales por parte del cliente, estas serán <strong>facturadas por separado</strong> a la tarifa por hora establecida antes de la finalización del proyecto.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Firma - Siempre al final (página 2 o página 1 si no hay segunda página) */}
             {data.signature && (
               <div className="px-6 pb-6">
                 <div className="border-t border-border pt-4">
@@ -1233,7 +1566,7 @@ function BudgetPreview({ data }: { data: BudgetData }) {
               </div>
             )}
 
-            {/* Footer */}
+            {/* Footer - Siempre al final (página 2 o página 1 si no hay segunda página) */}
             <div className="bg-muted/30 px-6 py-4 border-t border-border">
               <div className="grid grid-cols-3 gap-4 text-xs">
                 <div>

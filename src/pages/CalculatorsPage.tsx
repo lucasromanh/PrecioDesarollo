@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HourlyRateCalculator } from '@/components/calculators/HourlyRateCalculator';
@@ -6,15 +8,27 @@ import { BackendApiEstimator } from '@/components/calculators/BackendApiEstimato
 import { AiChatbotEstimator } from '@/components/calculators/AiChatbotEstimator';
 import { MobileAppEstimator } from '@/components/calculators/MobileAppEstimator';
 import { GameProjectEstimator } from '@/components/calculators/GameProjectEstimator';
+import { BusinessSystemEstimator } from '@/components/calculators/BusinessSystemEstimator';
+import { DesktopAppEstimator } from '@/components/calculators/DesktopAppEstimator';
 
 export function CalculatorsPage() {
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState('hourly');
+
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
+
   return (
     <PageContainer
       title="Calculadoras de Precios"
       description="Calcula tu tarifa por hora y estima precios para diferentes tipos de proyectos"
     >
-      <Tabs defaultValue="hourly" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 h-auto gap-2 p-2 mb-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 h-auto gap-2 p-2 mb-6">
           <TabsTrigger value="hourly" className="text-sm md:text-base py-3">
             <span className="hidden md:inline">Tarifa por Hora</span>
             <span className="md:hidden">💼 Hora</span>
@@ -38,6 +52,14 @@ export function CalculatorsPage() {
           <TabsTrigger value="game" className="text-sm md:text-base py-3">
             <span className="hidden md:inline">Videojuegos</span>
             <span className="md:hidden">🎮 Juego</span>
+          </TabsTrigger>
+          <TabsTrigger value="business" className="text-sm md:text-base py-3">
+            <span className="hidden md:inline">Sistemas</span>
+            <span className="md:hidden">🏢 Sistema</span>
+          </TabsTrigger>
+          <TabsTrigger value="desktop" className="text-sm md:text-base py-3">
+            <span className="hidden md:inline">Escritorio</span>
+            <span className="md:hidden">💻 Desktop</span>
           </TabsTrigger>
         </TabsList>
 
@@ -63,6 +85,14 @@ export function CalculatorsPage() {
 
         <TabsContent value="game" className="mt-6">
           <GameProjectEstimator />
+        </TabsContent>
+
+        <TabsContent value="business" className="mt-6">
+          <BusinessSystemEstimator />
+        </TabsContent>
+
+        <TabsContent value="desktop" className="mt-6">
+          <DesktopAppEstimator />
         </TabsContent>
       </Tabs>
     </PageContainer>

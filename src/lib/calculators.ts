@@ -14,6 +14,12 @@ export interface HourlyRateResult {
   recommendedMin: number;
   recommendedMax: number;
   explanation: string;
+  // Información detallada para el presupuesto
+  role?: string;
+  seniority?: string;
+  country?: string;
+  monthlyExpenses?: number;
+  workingHours?: number;
 }
 
 export interface ProjectEstimateParams {
@@ -47,8 +53,23 @@ export interface DesktopAppEstimateParams {
   platform: string; // 'windows' | 'mac' | 'linux' | 'cross-platform'
   appType: string; // 'simple' | 'standard' | 'complex'
   needsDatabase: boolean;
+  databaseHosting?: boolean; // Alojamiento de base de datos
   needsInstaller: boolean;
   currency?: string;
+}
+
+export interface BusinessSystemParams {
+  systemType: string; // 'inventory' | 'crm' | 'real-estate' | 'pos' | 'erp'
+  users: number;
+  modules: string[]; // Módulos específicos del sistema
+  complexity: 1 | 2 | 3;
+  needsReports: boolean;
+  needsMobile: boolean;
+  needsAPI: boolean;
+  needsGeolocation?: boolean; // Para bienes raíces
+  databaseHosting: boolean;
+  currency?: string;
+  hourlyRate?: number;
 }
 
 export interface AutomationEstimateParams {
@@ -245,6 +266,12 @@ export function calculateHourlyRate(params: HourlyRateParams): HourlyRateResult 
     recommendedMin: Math.round(recommendedMin * rate),
     recommendedMax: Math.round(recommendedMax * rate),
     explanation,
+    // Información adicional para el presupuesto
+    role,
+    seniority,
+    country,
+    monthlyExpenses: Math.round(monthlyExpenses * rate),
+    workingHours: billableHours,
   };
 }
 
@@ -441,8 +468,10 @@ export function estimateBackendHours(params: BackendEstimateParams): EstimateRes
     });
   }
 
-  const typeText = type === 'api-rest' ? 'API REST' :
+  const typeText = type === 'rest' || type === 'api-rest' ? 'API REST' :
                    type === 'graphql' ? 'GraphQL' :
+                   type === 'microservicios' ? 'Microservicios' :
+                   type === 'script-python' ? 'Script Python / Automatización' :
                    type === 'websocket' ? 'WebSocket' : 'Script/Automatización';
 
   return {
@@ -712,7 +741,7 @@ export function estimateMobileApp(params: MobileAppEstimateParams): EstimateResu
 
 export function estimateDesktopApp(params: DesktopAppEstimateParams): EstimateResult {
   const {
-    platform, appType, needsDatabase, needsInstaller,
+    platform, appType, needsDatabase, databaseHosting = false, needsInstaller,
     currency = 'USD'
   } = params;
 
@@ -746,7 +775,16 @@ export function estimateDesktopApp(params: DesktopAppEstimateParams): EstimateRe
   const minPrice = Math.round(totalHours * calculatedRate * 0.9);
   const maxPrice = Math.round(totalHours * calculatedRate * 1.1);
 
-  const additionalCosts = [];
+  const additionalCosts: { item: string; monthlyCost?: number; oneTimeCost?: number; description: string }[] = [];
+  
+  // Alojamiento de base de datos si lo necesita
+  if (needsDatabase && databaseHosting) {
+    additionalCosts.push({
+      item: 'Alojamiento de Base de Datos',
+      monthlyCost: Math.round(50 * rate),
+      description: 'Servidor de base de datos remoto con backups automáticos'
+    });
+  }
   
   if (platform === 'mac' || platform === 'cross-platform') {
     additionalCosts.push({
@@ -1053,5 +1091,172 @@ export function estimateGameProject(params: GameProjectParams): EstimateResult {
     ],
     additionalCosts,
     explanation: `Videojuego ${gameType} para ${platformName} con ${needs3D ? 'gráficos 3D' : 'gráficos 2D'} y complejidad ${complexity === 1 ? 'baja' : complexity === 2 ? 'media' : 'alta'}. ${needsMultiplayer ? 'Incluye multijugador online. ' : ''}Tarifa: ${currency} ${calculatedRate.toLocaleString()}/hora.`,
+  };
+}
+
+export function estimateBusinessSystem(params: BusinessSystemParams): EstimateResult {
+  const {
+    systemType,
+    users,
+    modules,
+    complexity,
+    needsReports,
+    needsMobile,
+    needsAPI,
+    needsGeolocation = false,
+    databaseHosting,
+    currency = 'USD',
+    hourlyRate
+  } = params;
+
+  const calculatedRate = hourlyRate || getDefaultHourlyRate(currency);
+  const rate = currencyRates[currency] || 1;
+
+  let baseHours = 0;
+
+  // Horas base según tipo de sistema
+  switch (systemType) {
+    case 'inventory':
+      baseHours = 120; // Sistema de inventario/stock
+      break;
+    case 'crm':
+      baseHours = 150; // CRM
+      break;
+    case 'real-estate':
+      baseHours = 180; // Sistema inmobiliario
+      break;
+    case 'pos':
+      baseHours = 100; // Punto de venta
+      break;
+    case 'erp':
+      baseHours = 300; // ERP completo
+      break;
+    default:
+      baseHours = 120;
+  }
+
+  // Ajustar por cantidad de usuarios
+  if (users > 50) baseHours += 30;
+  if (users > 100) baseHours += 40;
+
+  // Ajustar por módulos adicionales (cada módulo extra)
+  const extraModules = Math.max(0, modules.length - 3);
+  baseHours += extraModules * 20;
+
+  // Ajustar por complejidad
+  const complexityMultiplier = complexity === 1 ? 0.8 : complexity === 2 ? 1 : 1.4;
+  baseHours = Math.round(baseHours * complexityMultiplier);
+
+  // Funcionalidades adicionales
+  if (needsReports) baseHours += 25; // Sistema de reportes avanzado
+  if (needsMobile) baseHours += 60; // App móvil complementaria
+  if (needsAPI) baseHours += 30; // API REST para integraciones
+  if (needsGeolocation) baseHours += 40; // Geolocalización y mapas
+
+  const totalHours = baseHours;
+  const minPrice = Math.round(totalHours * calculatedRate * rate * 0.85);
+  const maxPrice = Math.round(totalHours * calculatedRate * rate * 1.15);
+
+  // Costos adicionales
+  const additionalCosts: { item: string; monthlyCost?: number; oneTimeCost?: number; description: string }[] = [];
+
+  // Hosting de base de datos (obligatorio para estos sistemas)
+  if (databaseHosting) {
+    let dbCost = 0;
+    if (users <= 20) {
+      dbCost = 30; // DB pequeña
+    } else if (users <= 100) {
+      dbCost = 80; // DB media
+    } else {
+      dbCost = 150; // DB grande
+    }
+    additionalCosts.push({
+      item: 'Alojamiento de Base de Datos',
+      description: `Servidor de base de datos dedicado para ${users} usuarios concurrentes`,
+      monthlyCost: Math.round(dbCost * rate),
+      oneTimeCost: 0,
+    });
+  }
+
+  // Hosting de aplicación web
+  const hostingCost = users > 50 ? 50 : 25;
+  additionalCosts.push({
+    item: 'Hosting Web Profesional',
+    description: `Servidor web con SSL, backups automáticos y soporte para ${users} usuarios`,
+    monthlyCost: Math.round(hostingCost * rate),
+    oneTimeCost: 0,
+  });
+
+  // Dominio personalizado
+  additionalCosts.push({
+    item: 'Dominio .com Profesional',
+    description: 'Registro de dominio por 1 año',
+    monthlyCost: 0,
+    oneTimeCost: Math.round(15 * rate),
+  });
+
+  // SSL Certificado
+  additionalCosts.push({
+    item: 'Certificado SSL',
+    description: 'Certificado SSL para seguridad HTTPS',
+    monthlyCost: 0,
+    oneTimeCost: Math.round(50 * rate),
+  });
+
+  // Servicios de mapas si tiene geolocalización
+  if (needsGeolocation) {
+    additionalCosts.push({
+      item: 'API de Mapas (Google Maps)',
+      description: 'Créditos para geolocalización y visualización de mapas',
+      monthlyCost: Math.round(50 * rate),
+      oneTimeCost: 0,
+    });
+  }
+
+  // Nombres de tipos de sistema
+  const systemNames: Record<string, string> = {
+    'inventory': 'Sistema de Inventario/Stock',
+    'crm': 'Sistema CRM',
+    'real-estate': 'Sistema Inmobiliario',
+    'pos': 'Sistema Punto de Venta (POS)',
+    'erp': 'Sistema ERP Empresarial'
+  };
+
+  const systemName = systemNames[systemType] || 'Sistema de Gestión';
+  
+  // Detalles del proyecto
+  let projectDetails = `${systemName} - ${users} usuarios`;
+  if (needsMobile) projectDetails += ', App Móvil';
+  if (needsGeolocation) projectDetails += ', Geolocalización';
+  if (needsAPI) projectDetails += ', API REST';
+
+  return {
+    hours: totalHours,
+    minPrice,
+    maxPrice,
+    projectType: 'business-system',
+    projectDetails,
+    milestones: [
+      {
+        name: 'Fase 1: Análisis y Diseño',
+        percentage: 20,
+        amount: Math.round(minPrice * 0.2),
+        description: `Análisis de requerimientos, diseño de base de datos, arquitectura del sistema, wireframes de interfaces${needsGeolocation ? ', integración de mapas' : ''}`
+      },
+      {
+        name: 'Fase 2: Desarrollo del Core',
+        percentage: 50,
+        amount: Math.round(minPrice * 0.5),
+        description: `Implementación de módulos principales (${modules.slice(0, 3).join(', ')}), gestión de usuarios y permisos${needsAPI ? ', desarrollo de API REST' : ''}${needsReports ? ', sistema de reportes' : ''}`
+      },
+      {
+        name: 'Fase 3: Testing y Deploy',
+        percentage: 30,
+        amount: Math.round(minPrice * 0.3),
+        description: `Testing completo del sistema, optimización de rendimiento${needsMobile ? ', desarrollo de app móvil' : ''}, capacitación, documentación y despliegue en producción`
+      },
+    ],
+    additionalCosts,
+    explanation: `${systemName} para ${users} usuarios con ${modules.length} módulos y complejidad ${complexity === 1 ? 'básica' : complexity === 2 ? 'media' : 'alta'}. ${needsGeolocation ? 'Incluye geolocalización. ' : ''}Tarifa: ${currency} ${calculatedRate.toLocaleString()}/hora.`,
   };
 }

@@ -39,18 +39,144 @@ export function HomePage() {
         </div>
       </div>
 
-      {/* Features Cards */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 py-12 md:py-16 animate-in fade-in slide-in-from-bottom-6 duration-1000">
+      {/* Calculadoras Disponibles */}
+      <div className="py-12 md:py-16">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Calculadoras Disponibles</h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Herramientas especializadas para cada tipo de proyecto. Genera presupuestos profesionales en PDF.
+          </p>
+        </div>
+
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 animate-in fade-in slide-in-from-bottom-6 duration-1000">
+          <Link to="/calculators?tab=hourly">
+            <Card className="group hover:bg-[#222630] transition-all duration-300 border-border/50 shadow-[0_4px_16px_var(--shadow)] cursor-pointer h-full">
+              <CardHeader>
+                <div className="text-4xl mb-3">💼</div>
+                <CardTitle className="text-lg font-semibold">Tarifa por Hora</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Calcula tu tarifa según rol, seniority, país y gastos mensuales.
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to="/calculators?tab=web">
+            <Card className="group hover:bg-[#222630] transition-all duration-300 border-border/50 shadow-[0_4px_16px_var(--shadow)] cursor-pointer h-full">
+              <CardHeader>
+                <div className="text-4xl mb-3">🌐</div>
+                <CardTitle className="text-lg font-semibold">Proyecto Web</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Landing, corporativa, e-commerce, WordPress y más.
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to="/calculators?tab=backend">
+            <Card className="group hover:bg-[#222630] transition-all duration-300 border-border/50 shadow-[0_4px_16px_var(--shadow)] cursor-pointer h-full">
+              <CardHeader>
+                <div className="text-4xl mb-3">⚙️</div>
+                <CardTitle className="text-lg font-semibold">Backend/APIs</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  REST API, GraphQL, microservicios y más.
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to="/calculators?tab=ai">
+            <Card className="group hover:bg-[#222630] transition-all duration-300 border-border/50 shadow-[0_4px_16px_var(--shadow)] cursor-pointer h-full">
+              <CardHeader>
+                <div className="text-4xl mb-3">🤖</div>
+                <CardTitle className="text-lg font-semibold">IA/Chatbots</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Chatbots, asistentes con IA, RAG y automatización.
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to="/calculators?tab=mobile">
+            <Card className="group hover:bg-[#222630] transition-all duration-300 border-border/50 shadow-[0_4px_16px_var(--shadow)] cursor-pointer h-full">
+              <CardHeader>
+                <div className="text-4xl mb-3">📱</div>
+                <CardTitle className="text-lg font-semibold">App Móvil</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  iOS, Android o multiplataforma con React Native/Flutter.
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to="/calculators?tab=game">
+            <Card className="group hover:bg-[#222630] transition-all duration-300 border-border/50 shadow-[0_4px_16px_var(--shadow)] cursor-pointer h-full">
+              <CardHeader>
+                <div className="text-4xl mb-3">🎮</div>
+                <CardTitle className="text-lg font-semibold">Videojuegos</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Casual, arcade, puzzle para web, móvil o desktop.
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to="/calculators?tab=business">
+            <Card className="group hover:bg-[#222630] transition-all duration-300 border-border/50 shadow-[0_4px_16px_var(--shadow)] cursor-pointer h-full">
+              <CardHeader>
+                <div className="text-4xl mb-3">🏢</div>
+                <CardTitle className="text-lg font-semibold">Sistemas de Negocio</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  CRM, inventario, inmobiliario, POS, ERP con geolocalización.
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to="/calculators?tab=desktop">
+            <Card className="group hover:bg-[#222630] transition-all duration-300 border-border/50 shadow-[0_4px_16px_var(--shadow)] cursor-pointer h-full">
+              <CardHeader>
+                <div className="text-4xl mb-3">💻</div>
+                <CardTitle className="text-lg font-semibold">App Escritorio</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Windows, macOS, Linux o multiplataforma con Electron.
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
+      </div>
+
+      {/* Features */}
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 py-12 md:py-16">
         <Card className="group hover:bg-[#222630] transition-all duration-300 border-border/50 shadow-[0_4px_16px_var(--shadow)]">
           <CardHeader>
             <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-              <Calculator className="h-7 w-7 text-primary" />
+              <svg className="h-7 w-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
             </div>
-            <CardTitle className="text-2xl font-semibold">Tarifa por Hora</CardTitle>
+            <CardTitle className="text-2xl font-semibold">Descarga PDF Profesional</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground leading-relaxed">
-              Calcula tu tarifa considerando tu rol, seniority, ubicación, gastos mensuales y margen de beneficio deseado.
+              Genera presupuestos profesionales con desglose detallado, términos y condiciones. Descárgalos en PDF listo para enviar a tus clientes.
             </p>
           </CardContent>
         </Card>
@@ -58,13 +184,13 @@ export function HomePage() {
         <Card className="group hover:bg-[#222630] transition-all duration-300 border-border/50 shadow-[0_4px_16px_var(--shadow)]">
           <CardHeader>
             <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-              <Clock className="h-7 w-7 text-primary" />
+              <Calculator className="h-7 w-7 text-primary" />
             </div>
-            <CardTitle className="text-2xl font-semibold">Estimación de Proyectos</CardTitle>
+            <CardTitle className="text-2xl font-semibold">Cálculos Precisos</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground leading-relaxed">
-              Estima horas y precios para webs, e-commerce, WordPress, APIs backend, microservicios, chatbots y proyectos de IA.
+              Estimaciones basadas en tarifas reales del mercado argentino e internacional. Rangos mínimos y máximos para cada proyecto.
             </p>
           </CardContent>
         </Card>
@@ -78,11 +204,48 @@ export function HomePage() {
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground leading-relaxed">
-              Consulta tarifas de referencia por rol, seniority y país para posicionarte mejor en el mercado.
+              Consulta tarifas de referencia por rol, seniority y país para posicionarte mejor en el mercado freelance.
             </p>
           </CardContent>
         </Card>
       </div>
+
+      {/* Próximamente - Suscripción */}
+      <Card className="my-12 border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10">
+        <CardHeader>
+          <CardTitle className="text-2xl flex items-center gap-2">
+            <span className="text-3xl">🚀</span>
+            Próximamente: Plan Premium
+          </CardTitle>
+          <CardDescription className="text-base">Personaliza tus presupuestos y lleva tu negocio al siguiente nivel</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-muted-foreground">
+            Estamos trabajando en un <strong>plan de suscripción mensual de solo USD $5</strong> que incluirá:
+          </p>
+          <ul className="space-y-2 text-muted-foreground">
+            <li className="flex items-start gap-2">
+              <span className="text-primary mt-1">✓</span>
+              <span><strong>Logo de tu empresa</strong> en todos los presupuestos</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-primary mt-1">✓</span>
+              <span><strong>Datos de tu empresa</strong> personalizados (nombre, email, teléfono, dirección)</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-primary mt-1">✓</span>
+              <span><strong>Numeración automática de facturas</strong> para cada presupuesto</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-primary mt-1">✓</span>
+              <span><strong>Plantillas personalizadas</strong> con colores de tu marca</span>
+            </li>
+          </ul>
+          <p className="text-sm text-primary font-semibold pt-2">
+            ¡Mantente atento! Próximamente podrás suscribirte y profesionalizar aún más tus presupuestos.
+          </p>
+        </CardContent>
+      </Card>
 
       {/* How to Use */}
       <Card className="my-12 border-primary/20 bg-gradient-to-br from-card to-card/50">

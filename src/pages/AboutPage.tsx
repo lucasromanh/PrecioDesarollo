@@ -103,43 +103,45 @@ export function AboutPage() {
           </CardContent>
         </Card>
 
-        <Card className="hover:border-primary/30 transition-all duration-300">
+        <Card className="hover:border-primary/30 transition-all duration-300 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
           <CardHeader>
             <CardTitle className="text-xl flex items-center gap-2">
-              <span className="text-2xl">⚡</span>
-              Stack Tecnológico
+              <span className="text-2xl">👨‍💻</span>
+              Desarrollador
             </CardTitle>
-            <CardDescription>Construido con tecnologías modernas</CardDescription>
+            <CardDescription>Creado por un desarrollador, para desarrolladores</CardDescription>
           </CardHeader>
-          <CardContent>
-            <ul className="space-y-2 text-muted-foreground">
-              <li><strong>React 19</strong> + <strong>TypeScript</strong> - Framework y tipado</li>
-              <li><strong>Vite</strong> - Build tool ultrarrápido</li>
-              <li><strong>TailwindCSS</strong> - Estilos utility-first</li>
-              <li><strong>shadcn/ui</strong> - Componentes de UI accesibles y personalizables</li>
-              <li><strong>lucide-react</strong> - Iconos</li>
-              <li><strong>React Router</strong> - Navegación entre páginas</li>
-            </ul>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:border-primary/30 transition-all duration-300 border-primary/20 bg-gradient-to-br from-card to-card/50">
-          <CardHeader>
-            <CardTitle className="text-xl flex items-center gap-2">
-              <span className="text-2xl">🚀</span>
-              Sobre el Desarrollo
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-muted-foreground">
-            <p>
-              PreciosDesarrollo es un proyecto solo frontend, ideal para aprender y extender. El código está
-              organizado en una arquitectura limpia y escalable con separación clara de componentes, lógica de
-              negocio y servicios.
-            </p>
-            <p className="mt-4">
-              💡 ¿Quieres contribuir o mejorar la herramienta? El código es abierto y está listo para recibir
-              nuevas features.
-            </p>
+          <CardContent className="space-y-4">
+            <div className="flex items-start gap-4">
+              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <span className="text-4xl">👨‍💻</span>
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-foreground">Lucas Roman</h3>
+                <p className="text-sm text-primary font-medium">Software Developer</p>
+                <p className="text-muted-foreground">
+                  Desarrollador freelance especializado en soluciones web modernas, APIs y sistemas empresariales.
+                  Apasionado por crear herramientas que ayuden a otros desarrolladores a crecer profesionalmente.
+                </p>
+                <div className="flex items-center gap-2 pt-2">
+                  <svg className="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  <a 
+                    href="mailto:lucas@saltacoders.com" 
+                    className="text-primary hover:underline font-medium"
+                  >
+                    lucas@saltacoders.com
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div className="border-t border-border pt-4">
+              <p className="text-sm text-muted-foreground">
+                💡 <strong>¿Necesitas un presupuesto personalizado o ayuda con tu proyecto?</strong> No dudes en contactarme.
+                También estoy disponible para colaboraciones y desarrollo de nuevas features para esta herramienta.
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
