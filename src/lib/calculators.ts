@@ -31,12 +31,16 @@ export interface ProjectEstimateParams {
 }
 
 export interface MobileAppEstimateParams {
-  platform: string; // 'ios' | 'android' | 'both'
-  appType: string; // 'simple' | 'standard' | 'complex'
-  features: string[];
+  platform: 'ios' | 'android' | 'both';
+  screens: number;
+  complexity: 1 | 2 | 3;
   needsBackend: boolean;
+  needsAuth: boolean;
+  needsPayments: boolean;
+  needsPushNotifications: boolean;
   needsDesign: boolean;
   currency?: string;
+  hourlyRate?: number;
 }
 
 export interface DesktopAppEstimateParams {
@@ -79,14 +83,32 @@ export interface AiEstimateParams {
   hourlyRate?: number;
 }
 
+export interface GameProjectParams {
+  platform: 'web-pwa' | 'mobile' | 'desktop' | 'console';
+  gameType: 'casual' | 'arcade' | 'puzzle' | 'adventure' | 'multiplayer';
+  complexity: 1 | 2 | 3;
+  mobileTarget?: 'ios' | 'android' | 'both';
+  needsMultiplayer: boolean;
+  needsBackend: boolean;
+  needsIAP: boolean; // In-App Purchases
+  needsAds: boolean;
+  needsLeaderboards: boolean;
+  needs3D: boolean;
+  currency?: string;
+  hourlyRate?: number;
+}
+
 export interface EstimateResult {
   hours: number;
   minPrice: number;
   maxPrice: number;
+  projectType?: string; // Identificador del tipo de proyecto
+  projectDetails?: string; // Detalles específicos (plataforma, tipo, etc.)
   milestones: {
     name: string;
     percentage: number;
     amount: number;
+    description?: string;
   }[];
   additionalCosts: {
     item: string;
@@ -289,7 +311,7 @@ export function estimateProjectHours(params: ProjectEstimateParams): EstimateRes
     additionalCosts.push({
       item: 'Dominio',
       oneTimeCost: Math.round(15 * rate),
-      description: 'Registro anual de dominio .com'
+      description: 'Registro anual (renovación anual a cargo del cliente)'
     });
   }
   
@@ -302,7 +324,7 @@ export function estimateProjectHours(params: ProjectEstimateParams): EstimateRes
     additionalCosts.push({
       item: `Hosting ${hostingType}`,
       monthlyCost: Math.round((hostingCosts[hostingType as keyof typeof hostingCosts] || 5) * rate),
-      description: 'Costo mensual de alojamiento web'
+      description: 'Pago mensual recurrente (a cargo del cliente)'
     });
   }
   
@@ -310,18 +332,40 @@ export function estimateProjectHours(params: ProjectEstimateParams): EstimateRes
     additionalCosts.push({
       item: 'Base de Datos',
       monthlyCost: Math.round(10 * rate),
-      description: 'Base de datos gestionada (ej: AWS RDS, MongoDB Atlas)'
+      description: 'Servicio mensual gestionado (a cargo del cliente)'
     });
   }
+
+  const projectTypeText = projectType === 'landing' ? 'Landing Page' :
+                          projectType === 'corporate' ? 'Sitio Corporativo' :
+                          projectType === 'ecommerce' ? 'E-commerce' :
+                          projectType === 'blog' ? 'Blog' : 'Aplicación Web';
 
   return {
     hours: totalHours,
     minPrice,
     maxPrice,
+    projectType: 'web',
+    projectDetails: projectTypeText,
     milestones: [
-      { name: 'Adelanto', percentage: 30, amount: Math.round(minPrice * 0.3) },
-      { name: 'Desarrollo', percentage: 40, amount: Math.round(minPrice * 0.4) },
-      { name: 'Entrega', percentage: 30, amount: Math.round(minPrice * 0.3) },
+      { 
+        name: 'Fase 1: Planificación y Diseño', 
+        percentage: 30, 
+        amount: Math.round(minPrice * 0.3),
+        description: 'Wireframes, diseño UI/UX, arquitectura del sitio, prototipo inicial'
+      },
+      { 
+        name: 'Fase 2: Desarrollo Frontend', 
+        percentage: 40, 
+        amount: Math.round(minPrice * 0.4),
+        description: 'Maquetación HTML/CSS, implementación de componentes, responsive design, integraciones'
+      },
+      { 
+        name: 'Fase 3: Testing y Despliegue', 
+        percentage: 30, 
+        amount: Math.round(minPrice * 0.3),
+        description: 'Pruebas de funcionalidad, optimización, configuración de hosting, lanzamiento'
+      },
     ],
     additionalCosts,
     explanation: `Estimación para ${projectType} con ${pages} páginas, complejidad ${complexity === 1 ? 'baja' : complexity === 2 ? 'media' : 'alta'}, deadline ${deadline}${includesDesign ? ' incluyendo diseño UI/UX' : ''}. Tarifa: ${currency} ${calculatedRate.toLocaleString()}/hora.`,
@@ -377,7 +421,7 @@ export function estimateBackendHours(params: BackendEstimateParams): EstimateRes
     additionalCosts.push({
       item: `Base de Datos ${databaseType.toUpperCase()}`,
       monthlyCost: Math.round(dbCost * rate),
-      description: 'Servicio de base de datos gestionada'
+      description: 'Pago mensual del servicio gestionado (a cargo del cliente)'
     });
   }
   
@@ -385,7 +429,7 @@ export function estimateBackendHours(params: BackendEstimateParams): EstimateRes
     additionalCosts.push({
       item: 'Servicio de Autenticación',
       monthlyCost: Math.round(10 * rate),
-      description: 'Auth0, Firebase Auth o similar (hasta 7000 usuarios)'
+      description: 'Costo mensual (a cargo del cliente) - Auth0/Firebase hasta 7K usuarios'
     });
   }
   
@@ -393,18 +437,39 @@ export function estimateBackendHours(params: BackendEstimateParams): EstimateRes
     additionalCosts.push({
       item: 'Almacenamiento de Archivos',
       monthlyCost: Math.round(15 * rate),
-      description: 'AWS S3, Google Cloud Storage o similar (50GB)'
+      description: 'Pago mensual (a cargo del cliente) - S3/Cloud Storage ~50GB'
     });
   }
+
+  const typeText = type === 'api-rest' ? 'API REST' :
+                   type === 'graphql' ? 'GraphQL' :
+                   type === 'websocket' ? 'WebSocket' : 'Script/Automatización';
 
   return {
     hours: totalHours,
     minPrice,
     maxPrice,
+    projectType: 'backend',
+    projectDetails: typeText,
     milestones: [
-      { name: 'Arquitectura', percentage: 20, amount: Math.round(minPrice * 0.2) },
-      { name: 'Desarrollo', percentage: 50, amount: Math.round(minPrice * 0.5) },
-      { name: 'Testing y Deploy', percentage: 30, amount: Math.round(minPrice * 0.3) },
+      { 
+        name: 'Fase 1: Arquitectura y Diseño', 
+        percentage: 20, 
+        amount: Math.round(minPrice * 0.2),
+        description: 'Diseño de base de datos, arquitectura del sistema, documentación de API, elección de tecnologías'
+      },
+      { 
+        name: 'Fase 2: Desarrollo de Endpoints', 
+        percentage: 50, 
+        amount: Math.round(minPrice * 0.5),
+        description: `Implementación de ${endpoints} endpoints, integración con servicios externos, autenticación, validación de datos`
+      },
+      { 
+        name: 'Fase 3: Testing y Despliegue', 
+        percentage: 30, 
+        amount: Math.round(minPrice * 0.3),
+        description: 'Pruebas unitarias e integración, documentación final, configuración de servidor, CI/CD'
+      },
     ],
     additionalCosts,
     explanation: `Backend ${type} con ${endpoints} endpoints, ${integrations.length} integraciones y complejidad ${complexity === 1 ? 'baja' : complexity === 2 ? 'media' : 'alta'}. Tarifa: ${currency} ${calculatedRate.toLocaleString()}/hora.`,
@@ -473,7 +538,7 @@ export function estimateAiProjectHours(params: AiEstimateParams): EstimateResult
     additionalCosts.push({
       item: `Tokens de IA (${aiProvider})`,
       monthlyCost: Math.round(monthlyCost * rate),
-      description: `~${(monthlyTokens / 1000).toLocaleString()}K tokens/mes`
+      description: `~${(monthlyTokens / 1000).toLocaleString()}K tokens/mes - Costo mensual a cargo del cliente`
     });
   }
   
@@ -482,24 +547,46 @@ export function estimateAiProjectHours(params: AiEstimateParams): EstimateResult
     additionalCosts.push({
       item: 'Servidor GPU',
       monthlyCost: Math.round(150 * rate),
-      description: 'VPS con GPU para modelo local'
+      description: 'Pago mensual VPS con GPU (a cargo del cliente)'
     });
   } else {
     additionalCosts.push({
       item: 'Hosting Backend',
       monthlyCost: Math.round(20 * rate),
-      description: 'Servidor para API y lógica de negocio'
+      description: 'Pago mensual del servidor (a cargo del cliente)'
     });
   }
+
+  const implementationText = implementationType === 'chatbot-faq' ? 'Chatbot Básico (FAQ)' :
+                             implementationType === 'asistente-web' ? 'Asistente Integrado a Web' :
+                             implementationType === 'api-ia' ? 'Integración con API de IA' :
+                             'Modelo Custom con Fine-tuning';
 
   return {
     hours: totalHours,
     minPrice,
     maxPrice,
+    projectType: 'ai',
+    projectDetails: implementationText,
     milestones: [
-      { name: 'Investigación', percentage: 25, amount: Math.round(minPrice * 0.25) },
-      { name: 'Implementación', percentage: 50, amount: Math.round(minPrice * 0.5) },
-      { name: 'Testing y Ajustes', percentage: 25, amount: Math.round(minPrice * 0.25) },
+      { 
+        name: 'Fase 1: Investigación y Configuración', 
+        percentage: 25, 
+        amount: Math.round(minPrice * 0.25),
+        description: 'Análisis de requisitos, selección de modelo IA, configuración de APIs, preparación de datasets'
+      },
+      { 
+        name: 'Fase 2: Desarrollo e Integración', 
+        percentage: 50, 
+        amount: Math.round(minPrice * 0.5),
+        description: `Implementación del chatbot/IA, integración con ${aiProvider}, entrenamiento del modelo, desarrollo de interfaz`
+      },
+      { 
+        name: 'Fase 3: Testing y Optimización', 
+        percentage: 25, 
+        amount: Math.round(minPrice * 0.25),
+        description: 'Pruebas de precisión, ajuste de prompts, optimización de respuestas, documentación'
+      },
     ],
     additionalCosts,
     explanation: `Proyecto de IA tipo ${implementationType}, ${users} usuarios estimados${needsTraining ? ', con entrenamiento de datos propios' : ''}. Tarifa: ${currency} ${calculatedRate.toLocaleString()}/hora.`,
@@ -508,33 +595,49 @@ export function estimateAiProjectHours(params: AiEstimateParams): EstimateResult
 
 export function estimateMobileApp(params: MobileAppEstimateParams): EstimateResult {
   const {
-    platform, appType, features, needsBackend, needsDesign,
-    currency = 'USD'
+    platform,
+    screens,
+    complexity,
+    needsBackend,
+    needsAuth,
+    needsPayments,
+    needsPushNotifications,
+    needsDesign,
+    currency = 'USD',
+    hourlyRate
   } = params;
 
-  const calculatedRate = getDefaultHourlyRate(currency) * 1.2; // Apps móviles 20% más caras
+  // Calcular tarifa (apps móviles 20% más caras)
+  const calculatedRate = hourlyRate || Math.round(getDefaultHourlyRate(currency) * 1.2);
   const rate = currencyRates[currency] || 1;
 
-  // Horas base por tipo
-  const baseHoursByType = {
-    simple: 80,
-    standard: 160,
-    complex: 300
-  };
+  // Horas base por pantalla
+  const hoursPerScreen = complexity * 4; // 4-12 horas por pantalla según complejidad
+  let baseHours = screens * hoursPerScreen;
   
-  let baseHours = baseHoursByType[appType as keyof typeof baseHoursByType] || 160;
+  // Setup inicial del proyecto
+  baseHours += 20;
   
   // Multiplicador por plataforma
   if (platform === 'both') {
-    baseHours *= 1.7; // No es el doble porque hay código compartido
+    baseHours *= 1.6; // React Native/Flutter reduce duplicación
   }
   
-  // Horas adicionales por features
-  baseHours += features.length * 15;
-  
-  // Backend
+  // Funcionalidades adicionales
   if (needsBackend) {
-    baseHours *= 1.4;
+    baseHours += 40; // API, base de datos
+  }
+  
+  if (needsAuth) {
+    baseHours += 20; // Sistema de login/registro
+  }
+  
+  if (needsPayments) {
+    baseHours += 30; // Integración de pagos
+  }
+  
+  if (needsPushNotifications) {
+    baseHours += 15; // Firebase/OneSignal
   }
   
   // Diseño UI/UX
@@ -553,7 +656,7 @@ export function estimateMobileApp(params: MobileAppEstimateParams): EstimateResu
     additionalCosts.push({
       item: 'Apple Developer Program',
       oneTimeCost: Math.round(99 * rate),
-      description: 'Cuenta anual para publicar en App Store'
+      description: 'Suscripción anual (renovación a cargo del cliente)'
     });
   }
   
@@ -561,7 +664,7 @@ export function estimateMobileApp(params: MobileAppEstimateParams): EstimateResu
     additionalCosts.push({
       item: 'Google Play Console',
       oneTimeCost: Math.round(25 * rate),
-      description: 'Cuenta única para publicar en Play Store'
+      description: 'Pago único (a cargo del cliente)'
     });
   }
   
@@ -569,21 +672,41 @@ export function estimateMobileApp(params: MobileAppEstimateParams): EstimateResu
     additionalCosts.push({
       item: 'Backend & Base de Datos',
       monthlyCost: Math.round(30 * rate),
-      description: 'Servidor + BD para la app móvil'
+      description: 'Pago mensual del servidor + BD (a cargo del cliente)'
     });
   }
+
+  const platformText = platform === 'both' ? 'Multiplataforma (React Native/Flutter)' : 
+                       platform === 'ios' ? 'iOS (Swift/SwiftUI)' : 'Android (Kotlin)';
 
   return {
     hours: totalHours,
     minPrice,
     maxPrice,
+    projectType: 'mobile',
+    projectDetails: platformText,
     milestones: [
-      { name: 'Adelanto', percentage: 30, amount: Math.round(minPrice * 0.3) },
-      { name: 'MVP/Beta', percentage: 40, amount: Math.round(minPrice * 0.4) },
-      { name: 'Entrega Final', percentage: 30, amount: Math.round(minPrice * 0.3) },
+      { 
+        name: 'Fase 1: Diseño y Prototipo', 
+        percentage: 30, 
+        amount: Math.round(minPrice * 0.3),
+        description: `Diseño UI/UX de ${screens} pantallas, arquitectura de la app, flujo de navegación, wireframes`
+      },
+      { 
+        name: 'Fase 2: Desarrollo MVP', 
+        percentage: 40, 
+        amount: Math.round(minPrice * 0.4),
+        description: `Implementación de funcionalidades core, integración de servicios${needsAuth ? ', sistema de autenticación' : ''}${needsPayments ? ', pasarela de pagos' : ''}, testing interno`
+      },
+      { 
+        name: 'Fase 3: Finalización y Publicación', 
+        percentage: 30, 
+        amount: Math.round(minPrice * 0.3),
+        description: 'Pulido final, optimización de rendimiento, pruebas en dispositivos reales, publicación en stores'
+      },
     ],
     additionalCosts,
-    explanation: `App móvil ${appType} para ${platform === 'both' ? 'iOS y Android' : platform}, ${features.length} features adicionales. Tarifa: ${currency} ${Math.round(calculatedRate).toLocaleString()}/hora.`,
+    explanation: `App móvil con ${screens} pantallas para ${platform === 'both' ? 'iOS y Android' : platform.toUpperCase()}, complejidad ${complexity === 1 ? 'baja' : complexity === 2 ? 'media' : 'alta'}${needsBackend ? ', con backend' : ''}${needsAuth ? ', con autenticación' : ''}. Tarifa: ${currency} ${calculatedRate.toLocaleString()}/hora.`,
   };
 }
 
@@ -629,7 +752,7 @@ export function estimateDesktopApp(params: DesktopAppEstimateParams): EstimateRe
     additionalCosts.push({
       item: 'Apple Developer (Mac)',
       oneTimeCost: Math.round(99 * rate),
-      description: 'Para firmar apps de macOS'
+      description: 'Suscripción anual para firmar apps (a cargo del cliente)'
     });
   }
   
@@ -637,18 +760,41 @@ export function estimateDesktopApp(params: DesktopAppEstimateParams): EstimateRe
     additionalCosts.push({
       item: 'Certificado Code Signing',
       oneTimeCost: Math.round(200 * rate),
-      description: 'Para firmar ejecutables de Windows'
+      description: 'Pago anual para firmar ejecutables (a cargo del cliente)'
     });
   }
+
+  const platformText = platform === 'windows' ? 'Windows' :
+                       platform === 'mac' ? 'macOS' :
+                       platform === 'linux' ? 'Linux' : 'Multiplataforma';
+  const appTypeText = appType === 'simple' ? 'Aplicación Simple' :
+                      appType === 'standard' ? 'Aplicación Estándar' : 'Aplicación Compleja';
 
   return {
     hours: totalHours,
     minPrice,
     maxPrice,
+    projectType: 'desktop',
+    projectDetails: `${appTypeText} - ${platformText}`,
     milestones: [
-      { name: 'Adelanto', percentage: 30, amount: Math.round(minPrice * 0.3) },
-      { name: 'Desarrollo', percentage: 50, amount: Math.round(minPrice * 0.5) },
-      { name: 'Testing y Entrega', percentage: 20, amount: Math.round(minPrice * 0.2) },
+      { 
+        name: 'Fase 1: Diseño y Arquitectura', 
+        percentage: 30, 
+        amount: Math.round(minPrice * 0.3),
+        description: `Diseño de interfaz nativa, arquitectura para ${platform}, configuración de entorno de desarrollo`
+      },
+      { 
+        name: 'Fase 2: Desarrollo de Funcionalidades', 
+        percentage: 50, 
+        amount: Math.round(minPrice * 0.5),
+        description: `Implementación de ${appType}${needsDatabase ? ', integración con base de datos' : ''}, manejo de archivos, UI/UX nativa`
+      },
+      { 
+        name: 'Fase 3: Testing y Empaquetado', 
+        percentage: 20, 
+        amount: Math.round(minPrice * 0.2),
+        description: `Pruebas en diferentes versiones del SO, creación de instalador${needsInstaller ? '' : ' (si aplica)'}, firma de aplicación`
+      },
     ],
     additionalCosts,
     explanation: `Aplicación de escritorio ${appType} para ${platform}. Tarifa: ${currency} ${Math.round(calculatedRate).toLocaleString()}/hora.`,
@@ -689,7 +835,7 @@ export function estimateAutomation(params: AutomationEstimateParams): EstimateRe
     additionalCosts.push({
       item: 'Servidor para Cron Jobs',
       monthlyCost: Math.round(5 * rate),
-      description: 'VPS básico para ejecutar tareas programadas'
+      description: 'Pago mensual VPS (a cargo del cliente)'
     });
   }
   
@@ -697,19 +843,215 @@ export function estimateAutomation(params: AutomationEstimateParams): EstimateRe
     additionalCosts.push({
       item: 'Base de Datos',
       monthlyCost: Math.round(10 * rate),
-      description: 'Para almacenar datos procesados'
+      description: 'Pago mensual servicio gestionado (a cargo del cliente)'
     });
   }
+
+  const scriptTypeText = scriptType === 'web-scraping' ? 'Web Scraping' :
+                         scriptType === 'data-processing' ? 'Procesamiento de Datos' :
+                         scriptType === 'api-integration' ? 'Integración con APIs' : 'Automatización de Tareas';
 
   return {
     hours: totalHours,
     minPrice,
     maxPrice,
+    projectType: 'automation',
+    projectDetails: scriptTypeText,
     milestones: [
-      { name: 'Desarrollo', percentage: 60, amount: Math.round(minPrice * 0.6) },
-      { name: 'Testing y Deploy', percentage: 40, amount: Math.round(minPrice * 0.4) },
+      { 
+        name: 'Fase 1: Desarrollo e Implementación', 
+        percentage: 60, 
+        amount: Math.round(minPrice * 0.6),
+        description: `Desarrollo del script de ${scriptType}${needsDatabase ? ', integración con base de datos' : ''}${needsScheduling ? ', configuración de tareas programadas' : ''}, logging y manejo de errores`
+      },
+      { 
+        name: 'Fase 2: Testing y Despliegue', 
+        percentage: 40, 
+        amount: Math.round(minPrice * 0.4),
+        description: `Pruebas exhaustivas, documentación de uso${needsNotifications ? ', configuración de notificaciones' : ''}, deployment en servidor`
+      },
     ],
     additionalCosts,
     explanation: `Script de ${scriptType} con complejidad ${complexity === 1 ? 'baja' : complexity === 2 ? 'media' : 'alta'}. Tarifa: ${currency} ${Math.round(calculatedRate).toLocaleString()}/hora.`,
+  };
+}
+
+export function estimateGameProject(params: GameProjectParams): EstimateResult {
+  const {
+    platform,
+    gameType,
+    complexity,
+    mobileTarget,
+    needsMultiplayer,
+    needsBackend,
+    needsIAP,
+    needsAds,
+    needsLeaderboards,
+    needs3D,
+    currency = 'USD',
+    hourlyRate
+  } = params;
+
+  // Calcular tarifa (desarrollo de juegos es 30% más caro que desarrollo web)
+  const calculatedRate = hourlyRate || Math.round(getDefaultHourlyRate(currency) * 1.3);
+  const rate = currencyRates[currency] || 1;
+
+  let baseHours = 0;
+
+  // Horas base por tipo de juego
+  const gameTypeHours: Record<string, number> = {
+    casual: 80,      // Juego simple, mecánicas básicas
+    arcade: 120,     // Acción rápida, sistema de puntuación
+    puzzle: 100,     // Lógica de rompecabezas
+    adventure: 200,  // Historia, niveles complejos
+    multiplayer: 250 // Sincronización, matchmaking
+  };
+
+  baseHours = gameTypeHours[gameType] || 100;
+
+  // Ajustar por plataforma
+  const platformMultiplier: Record<string, number> = {
+    'web-pwa': 0.8,    // Más rápido, HTML5/WebGL
+    'mobile': 1.2,      // SDK móvil, optimización
+    'desktop': 1.0,     // Standard
+    'console': 1.8      // Certificación, requisitos estrictos
+  };
+
+  baseHours *= platformMultiplier[platform] || 1;
+
+  // Ajustar por complejidad
+  baseHours *= complexity;
+
+  // Gráficos 3D
+  if (needs3D) {
+    baseHours *= 1.5; // Modelado, texturas, iluminación
+  }
+
+  // Multijugador
+  if (needsMultiplayer) {
+    baseHours += 80; // Servidor, sincronización, lobby
+  }
+
+  // Backend
+  if (needsBackend) {
+    baseHours += 40; // Sistema de cuentas, guardar progreso
+  }
+
+  // Monetización
+  if (needsIAP) {
+    baseHours += 30; // Integración de compras
+  }
+
+  if (needsAds) {
+    baseHours += 15; // Integración de anuncios
+  }
+
+  if (needsLeaderboards) {
+    baseHours += 20; // Sistema de rankings
+  }
+
+  const totalHours = Math.round(baseHours);
+  const minPrice = Math.round(totalHours * calculatedRate * 0.9);
+  const maxPrice = Math.round(totalHours * calculatedRate * 1.2);
+
+  // Costos adicionales
+  const additionalCosts = [];
+
+  // Costos de publicación móvil
+  if (platform === 'mobile' && mobileTarget) {
+    if (mobileTarget === 'ios' || mobileTarget === 'both') {
+      additionalCosts.push({
+        item: 'Apple Developer Program',
+        oneTimeCost: Math.round(99 * rate),
+        description: 'Suscripción anual (renovación a cargo del cliente)'
+      });
+    }
+
+    if (mobileTarget === 'android' || mobileTarget === 'both') {
+      additionalCosts.push({
+        item: 'Google Play Console',
+        oneTimeCost: Math.round(25 * rate),
+        description: 'Pago único (a cargo del cliente)'
+      });
+    }
+  }
+
+  // Hosting para juegos web/PWA
+  if (platform === 'web-pwa') {
+    additionalCosts.push({
+      item: 'Hosting para Juego Web',
+      monthlyCost: Math.round(10 * rate),
+      description: 'Pago mensual CDN + storage (a cargo del cliente)'
+    });
+  }
+
+  // Backend para multijugador o guardado online
+  if (needsBackend || needsMultiplayer) {
+    const serverCost = needsMultiplayer ? 50 : 20;
+    additionalCosts.push({
+      item: needsMultiplayer ? 'Servidor Multijugador' : 'Backend para Guardado',
+      monthlyCost: Math.round(serverCost * rate),
+      description: `Pago mensual ${needsMultiplayer ? 'con escalabilidad para jugadores' : 'para datos de usuario'} (a cargo del cliente)`
+    });
+  }
+
+  // Base de datos para leaderboards
+  if (needsLeaderboards || needsBackend) {
+    additionalCosts.push({
+      item: 'Base de Datos',
+      monthlyCost: Math.round(15 * rate),
+      description: 'Pago mensual para rankings y datos (a cargo del cliente)'
+    });
+  }
+
+  // Licencias de engine (si aplica)
+  if (platform === 'console' || needs3D) {
+    additionalCosts.push({
+      item: 'Licencia de Game Engine',
+      monthlyCost: Math.round(40 * rate),
+      description: 'Unity Pro o Unreal (según revenue) - Pago mensual a cargo del cliente'
+    });
+  }
+
+  const platformName = platform === 'web-pwa' ? 'Web/PWA' : 
+                       platform === 'mobile' ? 'Móvil' : 
+                       platform === 'desktop' ? 'Desktop' : 'Consola';
+
+  const platformDetails = platform === 'web-pwa' ? 'Web/PWA' :
+                          platform === 'mobile' ? `Móvil (${mobileTarget === 'both' ? 'iOS y Android' : mobileTarget?.toUpperCase() || 'Móvil'})` :
+                          platform === 'desktop' ? 'Desktop' : 'Consola';
+  const gameTypeText = gameType === 'casual' ? 'Casual' :
+                       gameType === 'arcade' ? 'Arcade' :
+                       gameType === 'puzzle' ? 'Puzzle' :
+                       gameType === 'adventure' ? 'Aventura' : 'Multijugador';
+
+  return {
+    hours: totalHours,
+    minPrice,
+    maxPrice,
+    projectType: 'game',
+    projectDetails: `${gameTypeText} - ${platformDetails}`,
+    milestones: [
+      { 
+        name: 'Fase 1: Prototipo y GDD', 
+        percentage: 20, 
+        amount: Math.round(minPrice * 0.2),
+        description: `Game Design Document, prototipo jugable, mecánicas core, diseño de niveles${needs3D ? ', modelado 3D básico' : ''}`
+      },
+      { 
+        name: 'Fase 2: Desarrollo Principal', 
+        percentage: 50, 
+        amount: Math.round(minPrice * 0.5),
+        description: `Implementación completa del gameplay, ${needs3D ? 'gráficos y animaciones 3D' : 'sprites y animaciones 2D'}${needsMultiplayer ? ', sistema multijugador' : ''}${needsIAP ? ', tienda in-app' : ''}`
+      },
+      { 
+        name: 'Fase 3: Testing y Publicación', 
+        percentage: 30, 
+        amount: Math.round(minPrice * 0.3),
+        description: `Balanceo del juego, optimización de rendimiento, corrección de bugs${needsLeaderboards ? ', integración de leaderboards' : ''}, publicación`
+      },
+    ],
+    additionalCosts,
+    explanation: `Videojuego ${gameType} para ${platformName} con ${needs3D ? 'gráficos 3D' : 'gráficos 2D'} y complejidad ${complexity === 1 ? 'baja' : complexity === 2 ? 'media' : 'alta'}. ${needsMultiplayer ? 'Incluye multijugador online. ' : ''}Tarifa: ${currency} ${calculatedRate.toLocaleString()}/hora.`,
   };
 }

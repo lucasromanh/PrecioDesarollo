@@ -79,7 +79,11 @@ export function BackendApiEstimator() {
 
           {type !== 'script-python' && (
             <div className="space-y-2">
-              <Label htmlFor="endpoints">Número de Endpoints</Label>
+              <Label htmlFor="endpoints">
+                {type === 'graphql' ? 'Número de Queries/Mutations' : 
+                 type === 'microservicios' ? 'Número de Microservicios' : 
+                 'Número de Endpoints'}
+              </Label>
               <Input
                 id="endpoints"
                 type="number"
@@ -87,32 +91,87 @@ export function BackendApiEstimator() {
                 onChange={(e) => setEndpoints(Number(e.target.value))}
                 min={1}
               />
+              <p className="text-xs text-muted-foreground">
+                {type === 'graphql' && 'Queries para leer + Mutations para modificar'}
+                {type === 'microservicios' && 'Cantidad de servicios independientes a desarrollar'}
+                {type === 'rest' && 'Total de endpoints REST (GET, POST, PUT, DELETE)'}
+              </p>
             </div>
           )}
 
           {type !== 'script-python' && (
             <div className="space-y-2">
-              <Label>Integraciones Externas</Label>
+              <Label>
+                {type === 'microservicios' ? 'Tecnologías y Comunicación' : 'Integraciones Externas'}
+              </Label>
               <div className="space-y-2">
-                {availableIntegrations.map((integration) => (
-                  <div key={integration} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={integration}
-                      checked={integrations.includes(integration)}
-                      onCheckedChange={() => toggleIntegration(integration)}
-                    />
-                    <Label htmlFor={integration} className="cursor-pointer text-sm">
-                      {integration}
-                    </Label>
-                  </div>
-                ))}
+                {type === 'microservicios' ? (
+                  <>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="message-queue"
+                        checked={integrations.includes('Pagos (Stripe, MercadoPago)')}
+                        onCheckedChange={() => toggleIntegration('Pagos (Stripe, MercadoPago)')}
+                      />
+                      <Label htmlFor="message-queue" className="cursor-pointer text-sm">
+                        Message Queue (RabbitMQ, Kafka)
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="api-gateway"
+                        checked={integrations.includes('Autenticación (OAuth, JWT)')}
+                        onCheckedChange={() => toggleIntegration('Autenticación (OAuth, JWT)')}
+                      />
+                      <Label htmlFor="api-gateway" className="cursor-pointer text-sm">
+                        API Gateway
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="service-mesh"
+                        checked={integrations.includes('Email (SendGrid, AWS SES)')}
+                        onCheckedChange={() => toggleIntegration('Email (SendGrid, AWS SES)')}
+                      />
+                      <Label htmlFor="service-mesh" className="cursor-pointer text-sm">
+                        Service Mesh (Istio, Linkerd)
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="container"
+                        checked={integrations.includes('Storage (S3, Cloud)')}
+                        onCheckedChange={() => toggleIntegration('Storage (S3, Cloud)')}
+                      />
+                      <Label htmlFor="container" className="cursor-pointer text-sm">
+                        Containerización (Docker, Kubernetes)
+                      </Label>
+                    </div>
+                  </>
+                ) : (
+                  availableIntegrations.map((integration) => (
+                    <div key={integration} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={integration}
+                        checked={integrations.includes(integration)}
+                        onCheckedChange={() => toggleIntegration(integration)}
+                      />
+                      <Label htmlFor={integration} className="cursor-pointer text-sm">
+                        {integration}
+                      </Label>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}
 
           <div className="space-y-2">
             <Label htmlFor="complexity">
-              {type === 'script-python' ? 'Complejidad del Script' : 'Complejidad de Lógica de Negocio'}
+              {type === 'script-python' ? 'Complejidad del Script' : 
+               type === 'graphql' ? 'Complejidad del Schema' :
+               type === 'microservicios' ? 'Arquitectura' :
+               'Complejidad de Lógica de Negocio'}
             </Label>
             <Select
               id="complexity"
@@ -124,6 +183,18 @@ export function BackendApiEstimator() {
                   <option value="1">Baja (Script simple)</option>
                   <option value="2">Media (Lógica moderada)</option>
                   <option value="3">Alta (Procesamiento complejo)</option>
+                </>
+              ) : type === 'graphql' ? (
+                <>
+                  <option value="1">Baja (Schema simple, 3-5 tipos)</option>
+                  <option value="2">Media (Schema moderado, relaciones)</option>
+                  <option value="3">Alta (Subscriptions, federación)</option>
+                </>
+              ) : type === 'microservicios' ? (
+                <>
+                  <option value="1">Baja (2-3 servicios simples)</option>
+                  <option value="2">Media (4-6 servicios con comunicación)</option>
+                  <option value="3">Alta (7+ servicios, orquestación)</option>
                 </>
               ) : (
                 <>
@@ -167,6 +238,94 @@ export function BackendApiEstimator() {
                 />
                 <Label htmlFor="notifications" className="cursor-pointer">
                   Sistema de notificaciones
+                </Label>
+              </div>
+            </>
+          ) : type === 'graphql' ? (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="databaseType">Base de Datos</Label>
+                <Select id="databaseType" value={databaseType} onChange={(e) => setDatabaseType(e.target.value)}>
+                  <option value="sql">SQL (PostgreSQL, MySQL)</option>
+                  <option value="nosql">NoSQL (MongoDB, Firebase)</option>
+                  <option value="both">Ambas (SQL + NoSQL)</option>
+                </Select>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="dataLoaders"
+                  checked={needsDatabase}
+                  onCheckedChange={(checked) => setNeedsDatabase(checked as boolean)}
+                />
+                <Label htmlFor="dataLoaders" className="cursor-pointer">
+                  DataLoaders y Caché (N+1 queries)
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="auth"
+                  checked={needsAuth}
+                  onCheckedChange={(checked) => setNeedsAuth(checked as boolean)}
+                />
+                <Label htmlFor="auth" className="cursor-pointer">
+                  Resolvers con Autenticación
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="subscriptions"
+                  checked={needsFileStorage}
+                  onCheckedChange={(checked) => setNeedsFileStorage(checked as boolean)}
+                />
+                <Label htmlFor="subscriptions" className="cursor-pointer">
+                  Real-time Subscriptions (WebSockets)
+                </Label>
+              </div>
+            </>
+          ) : type === 'microservicios' ? (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="databaseType">Estrategia de Datos</Label>
+                <Select id="databaseType" value={databaseType} onChange={(e) => setDatabaseType(e.target.value)}>
+                  <option value="sql">SQL compartida</option>
+                  <option value="nosql">NoSQL por servicio</option>
+                  <option value="both">Mixta (SQL + NoSQL)</option>
+                </Select>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="dbPerService"
+                  checked={needsDatabase}
+                  onCheckedChange={(checked) => setNeedsDatabase(checked as boolean)}
+                />
+                <Label htmlFor="dbPerService" className="cursor-pointer">
+                  Base de Datos por Servicio
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="discovery"
+                  checked={needsAuth}
+                  onCheckedChange={(checked) => setNeedsAuth(checked as boolean)}
+                />
+                <Label htmlFor="discovery" className="cursor-pointer">
+                  Service Discovery y Load Balancing
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="monitoring"
+                  checked={needsFileStorage}
+                  onCheckedChange={(checked) => setNeedsFileStorage(checked as boolean)}
+                />
+                <Label htmlFor="monitoring" className="cursor-pointer">
+                  Logging Centralizado y Monitoring
                 </Label>
               </div>
             </>
