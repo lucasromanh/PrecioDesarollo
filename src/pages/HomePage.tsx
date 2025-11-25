@@ -211,86 +211,182 @@ export function HomePage() {
       </div>
 
       {/* Próximamente - Suscripción */}
-      <Card className="my-12 border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10">
-        <CardHeader>
-          <CardTitle className="text-2xl flex items-center gap-2">
-            <span className="text-3xl">🚀</span>
-            Próximamente: Plan Premium
-          </CardTitle>
-          <CardDescription className="text-base">Personaliza tus presupuestos y lleva tu negocio al siguiente nivel</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-muted-foreground">
-            Estamos trabajando en un <strong>plan de suscripción mensual de solo USD $5</strong> que incluirá:
+      <div className="my-12 relative overflow-hidden rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-background p-8 md:p-12">
+        {/* Cohete animado */}
+        <div className="absolute top-4 right-4 md:top-8 md:right-8 text-6xl md:text-8xl animate-bounce">
+          🚀
+        </div>
+        
+        {/* Estrellas decorativas */}
+        <div className="absolute top-1/4 left-10 text-2xl animate-pulse delay-100">✨</div>
+        <div className="absolute top-1/3 right-20 text-xl animate-pulse delay-300">⭐</div>
+        <div className="absolute bottom-1/4 left-20 text-3xl animate-pulse delay-500">💫</div>
+        
+        <div className="relative z-10 max-w-3xl">
+          <div className="inline-block px-4 py-2 rounded-full bg-primary/20 border border-primary/40 mb-4 animate-pulse">
+            <span className="text-sm font-bold text-primary">PRÓXIMAMENTE</span>
+          </div>
+          
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">
+            Plan Premium
+          </h2>
+          
+          <p className="text-lg text-muted-foreground mb-6">
+            Personaliza tus presupuestos y lleva tu negocio al siguiente nivel
           </p>
-          <ul className="space-y-2 text-muted-foreground">
-            <li className="flex items-start gap-2">
-              <span className="text-primary mt-1">✓</span>
-              <span><strong>Logo de tu empresa</strong> en todos los presupuestos</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-primary mt-1">✓</span>
-              <span><strong>Datos de tu empresa</strong> personalizados (nombre, email, teléfono, dirección)</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-primary mt-1">✓</span>
-              <span><strong>Numeración automática de facturas</strong> para cada presupuesto</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-primary mt-1">✓</span>
-              <span><strong>Plantillas personalizadas</strong> con colores de tu marca</span>
-            </li>
-          </ul>
-          <p className="text-sm text-primary font-semibold pt-2">
-            ¡Mantente atento! Próximamente podrás suscribirte y profesionalizar aún más tus presupuestos.
+          
+          <div className="bg-card/50 backdrop-blur-sm rounded-xl p-6 border border-border/50 mb-6">
+            <p className="text-muted-foreground mb-4">
+              Estamos trabajando en un <strong className="text-primary text-xl">plan de suscripción mensual de solo USD $5</strong> que incluirá:
+            </p>
+            <div className="grid md:grid-cols-2 gap-3">
+              <div className="flex items-start gap-3 group">
+                <span className="text-2xl group-hover:scale-125 transition-transform">🎨</span>
+                <div>
+                  <strong className="text-foreground">Logo personalizado</strong>
+                  <p className="text-sm text-muted-foreground">Tu marca en todos los presupuestos</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 group">
+                <span className="text-2xl group-hover:scale-125 transition-transform">📝</span>
+                <div>
+                  <strong className="text-foreground">Datos de empresa</strong>
+                  <p className="text-sm text-muted-foreground">Información personalizada</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 group">
+                <span className="text-2xl group-hover:scale-125 transition-transform">🔢</span>
+                <div>
+                  <strong className="text-foreground">Numeración automática</strong>
+                  <p className="text-sm text-muted-foreground">Facturas correlativas</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 group">
+                <span className="text-2xl group-hover:scale-125 transition-transform">🎯</span>
+                <div>
+                  <strong className="text-foreground">Plantillas a medida</strong>
+                  <p className="text-sm text-muted-foreground">Colores de tu marca</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <p className="text-sm text-primary font-bold animate-pulse">
+            ⚡ ¡Mantente atento! Próximamente disponible para suscripción
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* How to Use */}
-      <Card className="my-12 border-primary/20 bg-gradient-to-br from-card to-card/50">
-        <CardHeader>
-          <CardTitle className="text-2xl">Cómo usar esta herramienta</CardTitle>
-          <CardDescription>Sigue estos pasos para obtener estimaciones precisas</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-4 group">
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg shadow-lg group-hover:scale-110 transition-transform">
-              1
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg">Calcula tu tarifa por hora</h3>
-              <p className="text-muted-foreground">
-                Ingresa tus datos personales: rol, seniority, ubicación y gastos. La herramienta te dará un rango recomendado.
-              </p>
-            </div>
+      <div className="my-12 space-y-8">
+        <h2 className="text-3xl font-bold text-center bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">
+          Cómo usar la herramienta
+        </h2>
+        
+        <div className="grid gap-8 md:grid-cols-3 relative">
+          {/* Línea conectora en desktop */}
+          <div className="hidden md:block absolute top-20 left-1/4 right-1/4 h-1 bg-gradient-to-r from-primary/50 via-orange-500/50 to-primary/50"></div>
+          
+          {/* Paso 1 */}
+          <div className="relative group">
+            <div className="absolute -inset-1 bg-gradient-to-r from-primary to-orange-500 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
+            <Card className="relative bg-card hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+              <CardHeader>
+                <div className="flex justify-center mb-4">
+                  <div className="relative">
+                    <div className="text-6xl animate-bounce">🎯</div>
+                    <div className="absolute -top-2 -right-2 bg-primary text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg animate-pulse">
+                      1
+                    </div>
+                  </div>
+                </div>
+                <CardTitle className="text-center text-xl">
+                  Elige tu calculadora
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground text-center">
+                  Selecciona el tipo de proyecto que necesitas calcular desde las <strong className="text-primary">8 opciones disponibles</strong> arriba.
+                </p>
+                <div className="mt-4 flex justify-center gap-2 text-2xl">
+                  <span className="animate-pulse delay-100">💼</span>
+                  <span className="animate-pulse delay-200">🌐</span>
+                  <span className="animate-pulse delay-300">📱</span>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
-          <div className="flex gap-4 group">
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg shadow-lg group-hover:scale-110 transition-transform">
-              2
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg">Usa esa tarifa para estimar proyectos</h3>
-              <p className="text-muted-foreground">
-                Define las características del proyecto (tipo, complejidad, deadline) y obtén una estimación de horas y precio.
-              </p>
-            </div>
+          {/* Paso 2 */}
+          <div className="relative group">
+            <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
+            <Card className="relative bg-card hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+              <CardHeader>
+                <div className="flex justify-center mb-4">
+                  <div className="relative">
+                    <div className="text-6xl animate-pulse">✍️</div>
+                    <div className="absolute -top-2 -right-2 bg-orange-500 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg animate-pulse">
+                      2
+                    </div>
+                  </div>
+                </div>
+                <CardTitle className="text-center text-xl">
+                  Completa los datos
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground text-center">
+                  Ingresa los detalles de tu proyecto y las características que necesitas implementar.
+                </p>
+                <div className="mt-4 flex justify-center gap-2 text-2xl">
+                  <span className="animate-bounce delay-100">⚙️</span>
+                  <span className="animate-bounce delay-300">🔧</span>
+                  <span className="animate-bounce delay-500">⚡</span>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
-          <div className="flex gap-4 group">
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg shadow-lg group-hover:scale-110 transition-transform">
-              3
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg">Ajusta según tu contexto</h3>
-              <p className="text-muted-foreground">
-                Las estimaciones son orientativas. Considera tu experiencia, portfolio, demanda y especificidades del cliente.
-              </p>
-            </div>
+          {/* Paso 3 */}
+          <div className="relative group">
+            <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
+            <Card className="relative bg-card hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+              <CardHeader>
+                <div className="flex justify-center mb-4">
+                  <div className="relative">
+                    <div className="text-6xl animate-bounce">📄</div>
+                    <div className="absolute -top-2 -right-2 bg-green-500 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg animate-pulse">
+                      3
+                    </div>
+                  </div>
+                </div>
+                <CardTitle className="text-center text-xl">
+                  Descarga tu presupuesto
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground text-center">
+                  Genera un <strong className="text-green-500">PDF profesional</strong> con el desglose completo de costos y tiempos del proyecto.
+                </p>
+                <div className="mt-4 flex justify-center">
+                  <div className="text-4xl animate-pulse">✅</div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+        
+        {/* Llamada a la acción */}
+        <div className="text-center mt-8 p-6 bg-gradient-to-r from-primary/10 to-orange-500/10 rounded-xl border border-primary/20">
+          <p className="text-lg font-semibold mb-2">
+            <span className="text-3xl mr-2">⚡</span>
+            ¡Es así de fácil!
+          </p>
+          <p className="text-muted-foreground">
+            En menos de 5 minutos tendrás tu presupuesto profesional listo para enviar
+          </p>
+        </div>
+      </div>
 
       {/* Warning Card */}
       <Card className="border-yellow-500/30 bg-yellow-500/5 hover:bg-yellow-500/10 transition-all duration-300">
