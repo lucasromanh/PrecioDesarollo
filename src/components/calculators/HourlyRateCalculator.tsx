@@ -150,22 +150,22 @@ export function HourlyRateCalculator() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 md:p-4 bg-card/30 rounded-lg border border-border/30 hover:border-border/60 transition-all duration-300">
-                <div>
+              <div className="flex items-center justify-between gap-2 p-3 md:p-4 bg-card/30 rounded-lg border border-border/30 hover:border-border/60 transition-all duration-300">
+                <div className="flex-1 min-w-0">
                   <p className="text-xs md:text-sm font-medium text-muted-foreground">Tarifa Mínima</p>
-                  <p className="text-xl md:text-2xl font-bold">{currency} {result.minimumRate.toLocaleString()}</p>
+                  <p className="text-base md:text-2xl font-bold break-words">{currency} {result.minimumRate.toLocaleString()}</p>
                 </div>
-                <Badge variant="secondary">Por hora</Badge>
+                <Badge variant="secondary" className="flex-shrink-0 text-xs">Por hora</Badge>
               </div>
 
-              <div className="flex items-center justify-between p-3 md:p-4 bg-primary/5 rounded-lg border-2 border-primary/30 hover:border-primary/50 hover:bg-primary/10 transition-all duration-300 shadow-lg shadow-primary/5">
-                <div>
+              <div className="flex items-center justify-between gap-2 p-3 md:p-4 bg-primary/5 rounded-lg border-2 border-primary/30 hover:border-primary/50 hover:bg-primary/10 transition-all duration-300 shadow-lg shadow-primary/5">
+                <div className="flex-1 min-w-0">
                   <p className="text-xs md:text-sm font-medium text-primary-foreground/80">Rango Recomendado</p>
-                  <p className="text-lg md:text-2xl font-bold text-primary">
+                  <p className="text-sm md:text-2xl font-bold text-primary break-words">
                     {currency} {result.recommendedMin.toLocaleString()} - {result.recommendedMax.toLocaleString()}
                   </p>
                 </div>
-                <Badge variant="default" className="shadow-md">Ideal</Badge>
+                <Badge variant="default" className="shadow-md flex-shrink-0 text-xs">Ideal</Badge>
               </div>
             </div>
 

@@ -798,34 +798,40 @@ export function BudgetGenerator({ result, type }: BudgetGeneratorProps) {
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => setSelectedPrice('min')}
-                    className={`p-4 rounded-lg border-2 transition-all ${
+                    className={`p-3 md:p-4 rounded-lg border-2 transition-all ${
                       selectedPrice === 'min'
                         ? 'border-primary bg-primary/10 ring-2 ring-primary/20'
                         : 'border-border hover:border-primary/50'
                     }`}
                   >
-                    <div className="text-sm font-semibold mb-1">Estimación Conservadora</div>
-                    <div className="text-2xl font-bold text-primary mb-1">
+                    <div className="text-xs md:text-sm font-semibold mb-1">Estimación Conservadora</div>
+                    <div className="text-sm md:text-2xl font-bold text-primary mb-1 break-words">
                       ${result.minPrice.toLocaleString()}
                     </div>
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-xs text-muted-foreground hidden md:block">
                       Precio mínimo - Proyecto sin imprevistos
+                    </div>
+                    <div className="text-xs text-muted-foreground md:hidden">
+                      Precio mínimo
                     </div>
                   </button>
                   <button
                     onClick={() => setSelectedPrice('max')}
-                    className={`p-4 rounded-lg border-2 transition-all ${
+                    className={`p-3 md:p-4 rounded-lg border-2 transition-all ${
                       selectedPrice === 'max'
                         ? 'border-primary bg-primary/10 ring-2 ring-primary/20'
                         : 'border-border hover:border-primary/50'
                     }`}
                   >
-                    <div className="text-sm font-semibold mb-1">Estimación Completa</div>
-                    <div className="text-2xl font-bold text-primary mb-1">
+                    <div className="text-xs md:text-sm font-semibold mb-1">Estimación Completa</div>
+                    <div className="text-sm md:text-2xl font-bold text-primary mb-1 break-words">
                       ${result.maxPrice.toLocaleString()}
                     </div>
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-xs text-muted-foreground hidden md:block">
                       Precio máximo - Incluye margen de seguridad
+                    </div>
+                    <div className="text-xs text-muted-foreground md:hidden">
+                      Precio máximo
                     </div>
                   </button>
                 </div>
